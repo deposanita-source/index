@@ -95,14 +95,32 @@
       {"FIRMA":"PAKETLEME","URUN":"LOKUM","URETIM":600,"HAMMADDE":"NISASTA","HAMMADDE_MIKTARI":180,"TARIH":"11 Ekim","CALISAN":3}
     ];
 
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "tr-TR";
+      speechSynthesis.speak(utterance);
+    }
+
     window.onload = () => {
       speak("Merhaba hosgeldiniz, ben Sanita Paketleme Bolumu Yapay Zeka Asistaniyim. Nasil yardimci olabilirim");
     };
 
     document.getElementById("mic-button").onclick = () => {
+      if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+        alert("Tarayiciniz sesli komut desteklemiyor.");
+        return;
+      }
+
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = "tr-TR";
+      recognition.interimResults = false;
+      recognition.continuous = false;
+
       recognition.start();
+
+      recognition.onstart = () => {
+        speak("Dinliyorum, lutfen sorunuzu sorun.");
+      };
 
       recognition.onresult = function (event) {
         const query = event.results[0][0].transcript.toLowerCase();
@@ -110,8 +128,8 @@
         processQuery(query);
       };
 
-      recognition.onerror = function () {
-        speak("Mikrofon hatasi olustu. Lutfen izin verdiginizden emin olun.");
+      recognition.onerror = function (event) {
+        alert("Mikrofon hatasi: " + event.error);
       };
     };
 
@@ -144,16 +162,4 @@
       if (query.includes("grafik")) {
         drawChart(filtered);
         mesaj = "Grafik gosteriliyor";
-      } else if (query.includes("kisi") || query.includes("calisan")) {
-        mesaj = `Toplam calisan sayisi: ${toplamCalisan}`;
-      } else if (query.includes("uretim") && query.includes("ortalama")) {
-        const ort = (toplamUretim / filtered.length).toFixed(2);
-        mesaj = `Ortalama uretim miktari: ${ort} birim`;
-      } else if (query.includes("hammadde")) {
-        mesaj = `Toplam kullanilan hammadde miktari: ${toplamHammadde} kg`;
-      } else if (query.includes("gun sayisi") || query.includes("kac gun")) {
-        mesaj = `Toplam ${tarihSet.size} farkli gun verisi var`;
-      } else {
-        mesaj = `Toplam uretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Calisan sayisi: ${toplamCalisan}`;
-      }
-
+      } else if (query
