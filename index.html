@@ -29,6 +29,20 @@
       cursor: pointer;
       box-shadow: 0 0 10px #00bcd4;
     }
+    #wave {
+      margin-top: 1em;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #00bcd4 40%, transparent 70%);
+      animation: pulseWave 1.5s infinite;
+      display: none;
+    }
+    @keyframes pulseWave {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.6; }
+      100% { transform: scale(1); opacity: 1; }
+    }
     #response {
       margin-top: 2em; font-size: 1.2em;
       text-align: center; max-width: 90%;
@@ -68,6 +82,7 @@
 <body>
   <header>🎙️ Sanita Sesli Veri Asistani</header>
   <button id="mic-button">🎤 Soru Sor</button>
+  <div id="wave"></div>
   <div id="response"></div>
   <div id="chart-container"><canvas id="chart"></canvas></div>
 
@@ -117,10 +132,8 @@
       recognition.continuous = false;
 
       recognition.start();
-
-      recognition.onstart = () => {
-        speak("Dinliyorum, lutfen sorunuzu sorun.");
-      };
+      document.getElementById("wave").style.display = "block";
+      speak("Dinliyorum, lutfen sorunuzu sorun.");
 
       recognition.onresult = function (event) {
         const query = event.results[0][0].transcript.toLowerCase();
@@ -130,6 +143,11 @@
 
       recognition.onerror = function (event) {
         alert("Mikrofon hatasi: " + event.error);
+        document.getElementById("wave").style.display = "none";
+      };
+
+      recognition.onend = function () {
+        document.getElementById("wave").style.display = "none";
       };
     };
 
@@ -140,26 +158,4 @@
                     query.includes("paketleme") ? "PAKETLEME" : null;
       const urun = query.includes("pul biber") ? "PUL BIBER" :
                    query.includes("lokum") ? "LOKUM" : null;
-      const tarihMatch = query.match(/\d{1,2}\s[a-zçğıöşü]{3,9}/i);
-      const tarih = tarihMatch ? tarihMatch[0].toUpperCase() : null;
-
-      if (firma) filtered = filtered.filter(r => r["FIRMA"] === firma);
-      if (urun) filtered = filtered.filter(r => r["URUN"] === urun);
-      if (tarih) filtered = filtered.filter(r => r["TARIH"].toUpperCase().includes(tarih));
-
-      let toplamUretim = 0, toplamHammadde = 0, toplamCalisan = 0;
-      const tarihSet = new Set();
-
-      filtered.forEach(row => {
-        toplamUretim += row["URETIM"] || 0;
-        toplamHammadde += row["HAMMADDE_MIKTARI"] || 0;
-        toplamCalisan += row["CALISAN"] || 0;
-        tarihSet.add(row["TARIH"]);
-      });
-
-      let mesaj = "";
-
-      if (query.includes("grafik")) {
-        drawChart(filtered);
-        mesaj = "Grafik gosteriliyor";
-      } else if (query
+      const tarihMatch = query.match(/\d{1,
