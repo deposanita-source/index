@@ -2,67 +2,72 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Sanita Veri Analiz Robotu</title>
+  <title>Sanita Sesli Veri Analiz Asistanı</title>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     html, body {
       margin: 0; padding: 0;
-      background-color: #121212; color: #fff;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
       font-family: 'Segoe UI', sans-serif;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-start;
       height: 100vh; overflow: hidden;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
     }
     header {
-      padding: 1em; font-size: 1.8em; font-weight: bold;
+      font-size: 1.8em; font-weight: bold;
+      margin-bottom: 1em; text-align: center;
     }
-    #controls {
-      display: flex; flex-direction: column;
-      align-items: center; gap: 1em; margin-bottom: 1em;
+    #mic {
+      width: 100px; height: 100px;
+      border-radius: 50%; background-color: #00bcd4;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px #00bcd4;
+      animation: pulse 2s infinite;
     }
-    input[type="file"], button {
-      padding: 0.8em 1.5em; font-size: 1em;
-      background-color: #1f1f1f; color: #fff;
-      border: 2px solid #00f; border-radius: 8px;
-      cursor: pointer;
-    }
-    #wave {
-      width: 100%; height: 6px;
-      background: linear-gradient(to right, #00f, #0ff);
-      animation: wave 1s infinite linear;
-      display: none;
+    @keyframes pulse {
+      0% { box-shadow: 0 0 5px #00bcd4; }
+      50% { box-shadow: 0 0 25px #00bcd4; }
+      100% { box-shadow: 0 0 5px #00bcd4; }
     }
     #response {
-      margin: 1em; font-size: 1.2em; text-align: center;
-      max-width: 90%;
+      margin-top: 2em; font-size: 1.2em;
+      text-align: center; max-width: 90%;
+      animation: fadeIn 2s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    input[type="file"] {
+      position: absolute; top: 10px; left: 10px;
+      background-color: #fff; color: #000;
+      padding: 0.5em; border-radius: 6px;
     }
     #chart-container {
       width: 90%; max-width: 1000px;
-      height: 400px; margin-bottom: 2em;
+      height: 400px; margin-top: 2em;
     }
     canvas {
       width: 100% !important; height: 100% !important;
-      background-color: #fff; border-radius: 8px; padding: 1em;
+      background-color: #fff; border-radius: 8px;
     }
   </style>
 </head>
 <body>
-  <header>📊 Sanita Paketleme Veri Analiz Robotu</header>
-  <div id="controls">
-    <input type="file" id="excelFile" accept=".xlsx" />
-    <button onclick="startListening()">🎤 Mikrofonu Başlat</button>
-  </div>
-  <div id="wave"></div>
-  <div id="response"></div>
+  <input type="file" id="excelFile" accept=".xlsx" />
+  <header>🎙️ Sanita Sesli Veri Analiz Asistanı</header>
+  <div id="mic">🎤</div>
+  <div id="response">Lütfen Excel dosyanızı yükleyin.</div>
   <div id="chart-container"><canvas id="chart"></canvas></div>
 
   <script>
-    const OPENAI_API_KEY = "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";
     let excelData = [];
 
     window.onload = () => {
-      speak("Merhaba, ben Sanita Paketleme Veri Analiz Robotuyum. Lütfen Excel dosyanızı yükleyiniz.");
+      speak("Merhaba hoşgeldiniz, ben Sanita Paketleme Bölümü Yapay Zeka Asistanıyım. Nasıl yardımcı olabilirim?");
+      setTimeout(() => startListening(), 4000);
     };
 
     document.getElementById("excelFile").addEventListener("change", (e) => {
@@ -72,7 +77,8 @@
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         excelData = XLSX.utils.sheet_to_json(sheet);
-        speak("Dosya yüklendi başarılı. Soru sormak için Mikrofonu Başlat butonuna basınız.");
+        speak("Dosya başarıyla yüklendi. Soru sorabilirsiniz.");
+        document.getElementById("response").innerText = "Dosya yüklendi. Soru sorabilirsiniz.";
       };
       reader.readAsBinaryString(e.target.files[0]);
     });
@@ -81,58 +87,75 @@
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = "tr-TR";
       recognition.start();
-      document.getElementById("wave").style.display = "block";
 
-      recognition.onresult = async function (event) {
+      recognition.onresult = function (event) {
         const query = event.results[0][0].transcript;
-        document.getElementById("wave").style.display = "none";
         document.getElementById("response").innerText = "Soru: " + query;
-
-        if (query.toLowerCase().includes("grafik")) {
-          drawChart();
-          speak("Grafik gösteriliyor.");
-          return;
-        }
-
-        const prompt = `Excel tablosu şu şekilde: ${JSON.stringify(excelData)}. Kullanıcı şu soruyu sordu: ${query}. Lütfen bu soruyu tabloya göre analiz et, filtrele, hesapla ve doğru cevabı ver.`;
-
-        try {
-          const response = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${OPENAI_API_KEY}`,
-            },
-            body: JSON.stringify({
-              model: "gpt-3.5-turbo",
-              messages: [{ role: "user", content: prompt }],
-            }),
-          });
-
-          const data = await response.json();
-          const answer = data.choices?.[0]?.message?.content || "Yanıt alınamadı.";
-          document.getElementById("response").innerText = "Yanıt: " + answer;
-          speak(answer);
-        } catch (error) {
-          document.getElementById("response").innerText = "❌ Hata: " + error.message;
-          speak("Yanıt alınamadı. Lütfen API anahtarını veya bağlantıyı kontrol edin.");
-        }
+        processQuery(query);
       };
     }
 
-    function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "tr-TR";
-      speechSynthesis.speak(utterance);
+    function processQuery(query) {
+      if (excelData.length === 0) {
+        speak("Önce Excel dosyasını yüklemelisiniz.");
+        return;
+      }
+
+      const lowerQuery = query.toLowerCase();
+      let filtered = excelData;
+
+      if (lowerQuery.includes("şekerci")) {
+        filtered = filtered.filter(row => row["FİRMA BÖLÜMÜ"]?.toLowerCase() === "şekercı" || row["FİRMA BÖLÜMÜ"]?.toLowerCase() === "şekerci");
+      }
+
+      if (lowerQuery.includes("pul biber")) {
+        filtered = filtered.filter(row => row["ÜRÜN ADI"]?.toLowerCase() === "pul biber");
+      }
+
+      if (lowerQuery.includes("lokum")) {
+        filtered = filtered.filter(row => row["ÜRÜN ADI"]?.toLowerCase() === "lokum");
+      }
+
+      if (lowerQuery.includes("tarih")) {
+        const tarihMatch = lowerQuery.match(/\d{1,2}\s[a-zçğıöşü]{3,9}/i);
+        if (tarihMatch) {
+          const tarihKelime = tarihMatch[0];
+          filtered = filtered.filter(row => row["TARİH"]?.toLowerCase().includes(tarihKelime));
+        }
+      }
+
+      let toplamUretim = 0;
+      let toplamHammadde = 0;
+      let toplamCalisan = 0;
+
+      filtered.forEach(row => {
+        const uretim = parseFloat(row["ÜRETİM MİKTARI"]);
+        const hammadde = parseFloat(row["KULLANILAN HAMMADDE MİKTARI"]);
+        const calisan = parseFloat(row["ÇALIŞAN SAYISI"]);
+        if (!isNaN(uretim)) toplamUretim += uretim;
+        if (!isNaN(hammadde)) toplamHammadde += hammadde;
+        if (!isNaN(calisan)) toplamCalisan += calisan;
+      });
+
+      let mesaj = "";
+      if (lowerQuery.includes("grafik")) {
+        drawChart(filtered);
+        mesaj = "Grafik gösteriliyor.";
+      } else {
+        mesaj = `Toplam üretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Toplam çalışan: ${toplamCalisan} kişi.`;
+      }
+
+      document.getElementById("response").innerText = mesaj;
+      speak(mesaj);
     }
 
-    function drawChart() {
+    function drawChart(data) {
       const grouped = {};
-      excelData.forEach(row => {
-        const name = row["KULLANILAN HAMMADDE"];
-        const miktar = parseFloat(row["KULLANILAN HAMMADDE MİKTARI"]);
-        if (name && !isNaN(miktar)) {
-          grouped[name] = (grouped[name] || 0) + miktar;
+      data.forEach(row => {
+        const tarih = row["TARİH"];
+        const miktar = parseFloat(row["ÜRETİM MİKTARI"]);
+        if (tarih && !isNaN(miktar)) {
+          grouped[tarih] = (grouped[tarih] || 0) + miktar;
         }
       });
 
@@ -145,10 +168,10 @@
         data: {
           labels: labels,
           datasets: [{
-            label: "Toplam Kullanılan Hammadde (kg)",
+            label: "Tarihe Göre Üretim Miktarı",
             data: values,
-            backgroundColor: "rgba(0, 123, 255, 0.6)",
-            borderColor: "rgba(0, 123, 255, 1)",
+            backgroundColor: "rgba(0, 255, 204, 0.6)",
+            borderColor: "rgba(0, 255, 204, 1)",
             borderWidth: 1
           }]
         },
@@ -160,6 +183,12 @@
           }
         }
       });
+    }
+
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "tr-TR";
+      speechSynthesis.speak(utterance);
     }
   </script>
 </body>
