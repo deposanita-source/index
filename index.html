@@ -18,17 +18,16 @@
       font-size: 1.8em; font-weight: bold;
       margin: 1em 0 0.5em 0; text-align: center;
     }
-    #mic {
-      width: 100px; height: 100px;
-      border-radius: 50%; background-color: #00bcd4;
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 20px #00bcd4;
-      animation: pulse 2s infinite; margin-top: 1em;
-    }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 5px #00bcd4; }
-      50% { box-shadow: 0 0 25px #00bcd4; }
-      100% { box-shadow: 0 0 5px #00bcd4; }
+    #mic-button {
+      margin-top: 1em;
+      padding: 1em 2em;
+      font-size: 1em;
+      background-color: #00bcd4;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 10px #00bcd4;
     }
     #response {
       margin-top: 2em; font-size: 1.2em;
@@ -68,7 +67,7 @@
 </head>
 <body>
   <header>🎙️ Sanita Sesli Veri Asistani</header>
-  <div id="mic">🎤</div>
+  <button id="mic-button">🎤 Soru Sor</button>
   <div id="response"></div>
   <div id="chart-container"><canvas id="chart"></canvas></div>
 
@@ -98,14 +97,11 @@
 
     window.onload = () => {
       speak("Merhaba hosgeldiniz, ben Sanita Paketleme Bolumu Yapay Zeka Asistaniyim. Nasil yardimci olabilirim");
-      setTimeout(() => startListening(), 4000);
     };
 
-    function startListening() {
+    document.getElementById("mic-button").onclick = () => {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = "tr-TR";
-      recognition.continuous = false;
-      recognition.interimResults = false;
       recognition.start();
 
       recognition.onresult = function (event) {
@@ -114,10 +110,10 @@
         processQuery(query);
       };
 
-      recognition.onerror = function (event) {
+      recognition.onerror = function () {
         speak("Mikrofon hatasi olustu. Lutfen izin verdiginizden emin olun.");
       };
-    }
+    };
 
     function processQuery(query) {
       let filtered = [...excelData];
@@ -150,3 +146,14 @@
         mesaj = "Grafik gosteriliyor";
       } else if (query.includes("kisi") || query.includes("calisan")) {
         mesaj = `Toplam calisan sayisi: ${toplamCalisan}`;
+      } else if (query.includes("uretim") && query.includes("ortalama")) {
+        const ort = (toplamUretim / filtered.length).toFixed(2);
+        mesaj = `Ortalama uretim miktari: ${ort} birim`;
+      } else if (query.includes("hammadde")) {
+        mesaj = `Toplam kullanilan hammadde miktari: ${toplamHammadde} kg`;
+      } else if (query.includes("gun sayisi") || query.includes("kac gun")) {
+        mesaj = `Toplam ${tarihSet.size} farkli gun verisi var`;
+      } else {
+        mesaj = `Toplam uretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Calisan sayisi: ${toplamCalisan}`;
+      }
+
