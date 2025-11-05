@@ -75,14 +75,14 @@
   <footer>
     <h3>📌 Ornek Sesli Sorular</h3>
     <ul>
-      <li>🔍 "Pul biber icin toplam uretim ne kadar?"</li>
-      <li>📅 "10 Ekim'de ne uretildi?"</li>
-      <li>👥 "Paketlemede kac kisi calisti?"</li>
+      <li>🔍 "Pul biber icin toplam uretim ne kadar"</li>
+      <li>📅 "10 Ekim'de ne uretildi"</li>
+      <li>👥 "Paketlemede kac kisi calisti"</li>
       <li>📊 "Tarihe gore uretim grafigi goster"</li>
-      <li>⚖️ "Kisi basina ortalama uretim miktari nedir?"</li>
-      <li>📦 "Lokum icin kullanilan toplam hammadde miktari nedir?"</li>
-      <li>🏆 "En cok uretim yapan firma hangisi?"</li>
-      <li>📈 "Urunlere gore ortalama uretim miktari nedir?"</li>
+      <li>⚖️ "Kisi basina ortalama uretim miktari nedir"</li>
+      <li>📦 "Lokum icin kullanilan toplam hammadde miktari nedir"</li>
+      <li>🏆 "En cok uretim yapan firma hangisi"</li>
+      <li>📈 "Urunlere gore ortalama uretim miktari nedir"</li>
     </ul>
     <p>Bu sorulari sesli olarak sorabilirsiniz. Sistem otomatik olarak yanit verir ve gerekirse grafik cizer.</p>
   </footer>
@@ -97,7 +97,7 @@
     ];
 
     window.onload = () => {
-      speak("Merhaba hosgeldiniz, ben Sanita Paketleme Bolumu Yapay Zeka Asistaniyim. Nasil yardimci olabilirim?");
+      speak("Merhaba hosgeldiniz, ben Sanita Paketleme Bolumu Yapay Zeka Asistaniyim. Nasil yardimci olabilirim");
       setTimeout(() => startListening(), 4000);
     };
 
@@ -141,7 +141,7 @@
 
       if (query.includes("grafik")) {
         drawChart(filtered);
-        mesaj = "Grafik gosteriliyor.";
+        mesaj = "Grafik gosteriliyor";
       } else if (query.includes("kisi") || query.includes("calisan")) {
         mesaj = `Toplam calisan sayisi: ${toplamCalisan}`;
       } else if (query.includes("uretim") && query.includes("ortalama")) {
@@ -149,5 +149,4 @@
         mesaj = `Ortalama uretim miktari: ${ort} birim`;
       } else if (query.includes("hammadde")) {
         mesaj = `Toplam kullanilan hammadde miktari: ${toplamHammadde} kg`;
-      } else if (query.includes("gun sayisi") || query.includes("kac gun")) {
-        mesaj = `Toplam ${tarihSet.size} farkli gun verisi
+      } else
