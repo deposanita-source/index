@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="tr">
+>
 <head>
   <meta charset="UTF-8" />
-  <title>Sanita Sesli Veri Analiz Asistanı</title>
+  <title>Sanita Sesli Veri Asistani</title>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -40,11 +41,6 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    input[type="file"] {
-      position: absolute; top: 10px; left: 10px;
-      background-color: #fff; color: #000;
-      padding: 0.5em; border-radius: 6px;
-    }
     #chart-container {
       width: 90%; max-width: 1000px;
       height: 400px; margin-top: 2em;
@@ -56,32 +52,24 @@
   </style>
 </head>
 <body>
-  <input type="file" id="excelFile" accept=".xlsx" />
-  <header>🎙️ Sanita Sesli Veri Analiz Asistanı</header>
+  <header>🎙️ Sanita Sesli Veri Asistani</header>
   <div id="mic">🎤</div>
-  <div id="response">Lütfen Excel dosyanızı yükleyin.</div>
+  <div id="response">Veri yukleniyor...</div>
   <div id="chart-container"><canvas id="chart"></canvas></div>
 
   <script>
-    let excelData = [];
+    const excelData = [
+      {"FIRMA BOLUMU":"SEKERCI","URUN ADI":"PUL BIBER","URETIM MIKTARI":1200,"KULLANILAN HAMMADDE":"KIRMIZI BIBER","KULLANILAN HAMMADDE MIKTARI":300,"TARIH":"10 Ekim","CALISAN SAYISI":5},
+      {"FIRMA BOLUMU":"SEKERCI","URUN ADI":"PUL BIBER","URETIM MIKTARI":800,"KULLANILAN HAMMADDE":"TUZ","KULLANILAN HAMMADDE MIKTARI":50,"TARIH":"10 Ekim","CALISAN SAYISI":5},
+      {"FIRMA BOLUMU":"SEKERCI","URUN ADI":"LOKUM","URETIM MIKTARI":500,"KULLANILAN HAMMADDE":"NISASTA","KULLANILAN HAMMADDE MIKTARI":200,"TARIH":"11 Ekim","CALISAN SAYISI":4},
+      {"FIRMA BOLUMU":"PAKETLEME","URUN ADI":"PUL BIBER","URETIM MIKTARI":1000,"KULLANILAN HAMMADDE":"KIRMIZI BIBER","KULLANILAN HAMMADDE MIKTARI":250,"TARIH":"10 Ekim","CALISAN SAYISI":3},
+      {"FIRMA BOLUMU":"PAKETLEME","URUN ADI":"LOKUM","URETIM MIKTARI":600,"KULLANILAN HAMMADDE":"NISASTA","KULLANILAN HAMMADDE MIKTARI":180,"TARIH":"11 Ekim","CALISAN SAYISI":3}
+    ];
 
     window.onload = () => {
-      speak("Merhaba hoşgeldiniz, ben Sanita Paketleme Bölümü Yapay Zeka Asistanıyım. Nasıl yardımcı olabilirim?");
+      speak("Merhaba hosgeldiniz, ben Sanita Paketleme Bolumu Yapay Zeka Asistaniyim. Nasil yardimci olabilirim?");
       setTimeout(() => startListening(), 4000);
     };
-
-    document.getElementById("excelFile").addEventListener("change", (e) => {
-      const reader = new FileReader();
-      reader.onload = function (evt) {
-        const workbook = XLSX.read(evt.target.result, { type: "binary" });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        excelData = XLSX.utils.sheet_to_json(sheet);
-        speak("Dosya başarıyla yüklendi. Soru sorabilirsiniz.");
-        document.getElementById("response").innerText = "Dosya yüklendi. Soru sorabilirsiniz.";
-      };
-      reader.readAsBinaryString(e.target.files[0]);
-    });
 
     function startListening() {
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
@@ -89,60 +77,52 @@
       recognition.start();
 
       recognition.onresult = function (event) {
-        const query = event.results[0][0].transcript;
+        const query = event.results[0][0].transcript.toLowerCase();
         document.getElementById("response").innerText = "Soru: " + query;
         processQuery(query);
       };
     }
 
     function processQuery(query) {
-      if (excelData.length === 0) {
-        speak("Önce Excel dosyasını yüklemelisiniz.");
-        return;
-      }
+      let filtered = [...excelData];
 
-      const lowerQuery = query.toLowerCase();
-      let filtered = excelData;
+      const firma = query.includes("sekerci") ? "SEKERCI" :
+                    query.includes("paketleme") ? "PAKETLEME" : null;
+      const urun = query.includes("pul biber") ? "PUL BIBER" :
+                   query.includes("lokum") ? "LOKUM" : null;
+      const tarihMatch = query.match(/\d{1,2}\s[a-zçğıöşü]{3,9}/i);
+      const tarih = tarihMatch ? tarihMatch[0].toUpperCase() : null;
 
-      if (lowerQuery.includes("şekerci")) {
-        filtered = filtered.filter(row => row["FİRMA BÖLÜMÜ"]?.toLowerCase() === "şekercı" || row["FİRMA BÖLÜMÜ"]?.toLowerCase() === "şekerci");
-      }
+      if (firma) filtered = filtered.filter(r => r["FIRMA BOLUMU"] === firma);
+      if (urun) filtered = filtered.filter(r => r["URUN ADI"] === urun);
+      if (tarih) filtered = filtered.filter(r => r["TARIH"].toUpperCase().includes(tarih));
 
-      if (lowerQuery.includes("pul biber")) {
-        filtered = filtered.filter(row => row["ÜRÜN ADI"]?.toLowerCase() === "pul biber");
-      }
-
-      if (lowerQuery.includes("lokum")) {
-        filtered = filtered.filter(row => row["ÜRÜN ADI"]?.toLowerCase() === "lokum");
-      }
-
-      if (lowerQuery.includes("tarih")) {
-        const tarihMatch = lowerQuery.match(/\d{1,2}\s[a-zçğıöşü]{3,9}/i);
-        if (tarihMatch) {
-          const tarihKelime = tarihMatch[0];
-          filtered = filtered.filter(row => row["TARİH"]?.toLowerCase().includes(tarihKelime));
-        }
-      }
-
-      let toplamUretim = 0;
-      let toplamHammadde = 0;
-      let toplamCalisan = 0;
+      let toplamUretim = 0, toplamHammadde = 0, toplamCalisan = 0;
+      const tarihSet = new Set();
 
       filtered.forEach(row => {
-        const uretim = parseFloat(row["ÜRETİM MİKTARI"]);
-        const hammadde = parseFloat(row["KULLANILAN HAMMADDE MİKTARI"]);
-        const calisan = parseFloat(row["ÇALIŞAN SAYISI"]);
-        if (!isNaN(uretim)) toplamUretim += uretim;
-        if (!isNaN(hammadde)) toplamHammadde += hammadde;
-        if (!isNaN(calisan)) toplamCalisan += calisan;
+        toplamUretim += row["URETIM MIKTARI"] || 0;
+        toplamHammadde += row["KULLANILAN HAMMADDE MIKTARI"] || 0;
+        toplamCalisan += row["CALISAN SAYISI"] || 0;
+        tarihSet.add(row["TARIH"]);
       });
 
       let mesaj = "";
-      if (lowerQuery.includes("grafik")) {
+
+      if (query.includes("grafik")) {
         drawChart(filtered);
-        mesaj = "Grafik gösteriliyor.";
+        mesaj = "Grafik gosteriliyor.";
+      } else if (query.includes("kisi") || query.includes("calisan")) {
+        mesaj = `Toplam calisan sayisi: ${toplamCalisan}`;
+      } else if (query.includes("uretim") && query.includes("ortalama")) {
+        const ort = (toplamUretim / filtered.length).toFixed(2);
+        mesaj = `Ortalama uretim miktari: ${ort} birim`;
+      } else if (query.includes("hammadde")) {
+        mesaj = `Toplam kullanilan hammadde miktari: ${toplamHammadde} kg`;
+      } else if (query.includes("gun sayisi") || query.includes("kac gun")) {
+        mesaj = `Toplam ${tarihSet.size} farkli gun verisi var.`;
       } else {
-        mesaj = `Toplam üretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Toplam çalışan: ${toplamCalisan} kişi.`;
+        mesaj = `Toplam uretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Calisan sayisi: ${toplamCalisan}`;
       }
 
       document.getElementById("response").innerText = mesaj;
@@ -152,11 +132,9 @@
     function drawChart(data) {
       const grouped = {};
       data.forEach(row => {
-        const tarih = row["TARİH"];
-        const miktar = parseFloat(row["ÜRETİM MİKTARI"]);
-        if (tarih && !isNaN(miktar)) {
-          grouped[tarih] = (grouped[tarih] || 0) + miktar;
-        }
+        const key = row["TARIH"];
+        const val = row["URETIM MIKTARI"];
+        if (key && val) grouped[key] = (grouped[key] || 0) + val;
       });
 
       const labels = Object.keys(grouped);
@@ -168,28 +146,6 @@
         data: {
           labels: labels,
           datasets: [{
-            label: "Tarihe Göre Üretim Miktarı",
+            label: "Tarihe Gore Uretim",
             data: values,
-            backgroundColor: "rgba(0, 255, 204, 0.6)",
-            borderColor: "rgba(0, 255, 204, 1)",
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            y: { beginAtZero: true }
-          }
-        }
-      });
-    }
-
-    function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "tr-TR";
-      speechSynthesis.speak(utterance);
-    }
-  </script>
-</body>
-</html>
+            backgroundColor: "rgba(0, 
