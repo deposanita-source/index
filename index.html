@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="tr">
->
 <head>
   <meta charset="UTF-8" />
   <title>Sanita Sesli Veri Asistani</title>
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     html, body {
@@ -12,20 +10,20 @@
       background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
       color: #fff;
       font-family: 'Segoe UI', sans-serif;
-      height: 100vh; overflow: hidden;
+      height: 100vh; overflow-x: hidden;
       display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: center; justify-content: flex-start;
     }
     header {
       font-size: 1.8em; font-weight: bold;
-      margin-bottom: 1em; text-align: center;
+      margin: 1em 0 0.5em 0; text-align: center;
     }
     #mic {
       width: 100px; height: 100px;
       border-radius: 50%; background-color: #00bcd4;
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 0 20px #00bcd4;
-      animation: pulse 2s infinite;
+      animation: pulse 2s infinite; margin-top: 1em;
     }
     @keyframes pulse {
       0% { box-shadow: 0 0 5px #00bcd4; }
@@ -49,21 +47,53 @@
       width: 100% !important; height: 100% !important;
       background-color: #fff; border-radius: 8px;
     }
+    footer {
+      width: 100%; background-color: rgba(255,255,255,0.1);
+      padding: 1em; text-align: center; font-size: 1em;
+      color: #fff; margin-top: 2em;
+    }
+    footer ul {
+      list-style: none; padding: 0; margin: 0 auto; max-width: 600px;
+    }
+    footer li {
+      margin: 0.3em 0;
+    }
+    footer h3 {
+      margin-bottom: 0.5em;
+    }
+    footer p {
+      margin-top: 1em; font-size: 0.9em; opacity: 0.8;
+    }
   </style>
 </head>
 <body>
   <header>🎙️ Sanita Sesli Veri Asistani</header>
   <div id="mic">🎤</div>
-  <div id="response">Veri yukleniyor...</div>
+  <div id="response"></div>
   <div id="chart-container"><canvas id="chart"></canvas></div>
+
+  <footer>
+    <h3>📌 Ornek Sesli Sorular</h3>
+    <ul>
+      <li>🔍 "Pul biber icin toplam uretim ne kadar?"</li>
+      <li>📅 "10 Ekim'de ne uretildi?"</li>
+      <li>👥 "Paketlemede kac kisi calisti?"</li>
+      <li>📊 "Tarihe gore uretim grafigi goster"</li>
+      <li>⚖️ "Kisi basina ortalama uretim miktari nedir?"</li>
+      <li>📦 "Lokum icin kullanilan toplam hammadde miktari nedir?"</li>
+      <li>🏆 "En cok uretim yapan firma hangisi?"</li>
+      <li>📈 "Urunlere gore ortalama uretim miktari nedir?"</li>
+    </ul>
+    <p>Bu sorulari sesli olarak sorabilirsiniz. Sistem otomatik olarak yanit verir ve gerekirse grafik cizer.</p>
+  </footer>
 
   <script>
     const excelData = [
-      {"FIRMA BOLUMU":"SEKERCI","URUN ADI":"PUL BIBER","URETIM MIKTARI":1200,"KULLANILAN HAMMADDE":"KIRMIZI BIBER","KULLANILAN HAMMADDE MIKTARI":300,"TARIH":"10 Ekim","CALISAN SAYISI":5},
-      {"FIRMA BOLUMU":"SEKERCI","URUN ADI":"PUL BIBER","URETIM MIKTARI":800,"KULLANILAN HAMMADDE":"TUZ","KULLANILAN HAMMADDE MIKTARI":50,"TARIH":"10 Ekim","CALISAN SAYISI":5},
-      {"FIRMA BOLUMU":"SEKERCI","URUN ADI":"LOKUM","URETIM MIKTARI":500,"KULLANILAN HAMMADDE":"NISASTA","KULLANILAN HAMMADDE MIKTARI":200,"TARIH":"11 Ekim","CALISAN SAYISI":4},
-      {"FIRMA BOLUMU":"PAKETLEME","URUN ADI":"PUL BIBER","URETIM MIKTARI":1000,"KULLANILAN HAMMADDE":"KIRMIZI BIBER","KULLANILAN HAMMADDE MIKTARI":250,"TARIH":"10 Ekim","CALISAN SAYISI":3},
-      {"FIRMA BOLUMU":"PAKETLEME","URUN ADI":"LOKUM","URETIM MIKTARI":600,"KULLANILAN HAMMADDE":"NISASTA","KULLANILAN HAMMADDE MIKTARI":180,"TARIH":"11 Ekim","CALISAN SAYISI":3}
+      {"FIRMA":"SEKERCI","URUN":"PUL BIBER","URETIM":1200,"HAMMADDE":"KIRMIZI BIBER","HAMMADDE_MIKTARI":300,"TARIH":"10 Ekim","CALISAN":5},
+      {"FIRMA":"SEKERCI","URUN":"PUL BIBER","URETIM":800,"HAMMADDE":"TUZ","HAMMADDE_MIKTARI":50,"TARIH":"10 Ekim","CALISAN":5},
+      {"FIRMA":"SEKERCI","URUN":"LOKUM","URETIM":500,"HAMMADDE":"NISASTA","HAMMADDE_MIKTARI":200,"TARIH":"11 Ekim","CALISAN":4},
+      {"FIRMA":"PAKETLEME","URUN":"PUL BIBER","URETIM":1000,"HAMMADDE":"KIRMIZI BIBER","HAMMADDE_MIKTARI":250,"TARIH":"10 Ekim","CALISAN":3},
+      {"FIRMA":"PAKETLEME","URUN":"LOKUM","URETIM":600,"HAMMADDE":"NISASTA","HAMMADDE_MIKTARI":180,"TARIH":"11 Ekim","CALISAN":3}
     ];
 
     window.onload = () => {
@@ -93,17 +123,17 @@
       const tarihMatch = query.match(/\d{1,2}\s[a-zçğıöşü]{3,9}/i);
       const tarih = tarihMatch ? tarihMatch[0].toUpperCase() : null;
 
-      if (firma) filtered = filtered.filter(r => r["FIRMA BOLUMU"] === firma);
-      if (urun) filtered = filtered.filter(r => r["URUN ADI"] === urun);
+      if (firma) filtered = filtered.filter(r => r["FIRMA"] === firma);
+      if (urun) filtered = filtered.filter(r => r["URUN"] === urun);
       if (tarih) filtered = filtered.filter(r => r["TARIH"].toUpperCase().includes(tarih));
 
       let toplamUretim = 0, toplamHammadde = 0, toplamCalisan = 0;
       const tarihSet = new Set();
 
       filtered.forEach(row => {
-        toplamUretim += row["URETIM MIKTARI"] || 0;
-        toplamHammadde += row["KULLANILAN HAMMADDE MIKTARI"] || 0;
-        toplamCalisan += row["CALISAN SAYISI"] || 0;
+        toplamUretim += row["URETIM"] || 0;
+        toplamHammadde += row["HAMMADDE_MIKTARI"] || 0;
+        toplamCalisan += row["CALISAN"] || 0;
         tarihSet.add(row["TARIH"]);
       });
 
@@ -120,32 +150,4 @@
       } else if (query.includes("hammadde")) {
         mesaj = `Toplam kullanilan hammadde miktari: ${toplamHammadde} kg`;
       } else if (query.includes("gun sayisi") || query.includes("kac gun")) {
-        mesaj = `Toplam ${tarihSet.size} farkli gun verisi var.`;
-      } else {
-        mesaj = `Toplam uretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Calisan sayisi: ${toplamCalisan}`;
-      }
-
-      document.getElementById("response").innerText = mesaj;
-      speak(mesaj);
-    }
-
-    function drawChart(data) {
-      const grouped = {};
-      data.forEach(row => {
-        const key = row["TARIH"];
-        const val = row["URETIM MIKTARI"];
-        if (key && val) grouped[key] = (grouped[key] || 0) + val;
-      });
-
-      const labels = Object.keys(grouped);
-      const values = Object.values(grouped);
-
-      const ctx = document.getElementById("chart").getContext("2d");
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "Tarihe Gore Uretim",
-            data: values,
-            backgroundColor: "rgba(0, 
+        mesaj = `Toplam ${tarihSet.size} farkli gun verisi
