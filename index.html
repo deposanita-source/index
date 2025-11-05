@@ -6,34 +6,23 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
-      height: 100%; width: 100%;
+      margin: 0; padding: 0;
       background-color: #121212; color: #fff;
       font-family: 'Segoe UI', sans-serif;
       display: flex; flex-direction: column;
       align-items: center; justify-content: flex-start;
-      overflow: hidden;
+      height: 100vh; overflow: hidden;
     }
     header {
-      padding: 1em; text-align: center;
-      font-size: 1.8em; font-weight: bold;
-    }
-    #welcome {
-      font-size: 1.2em; margin-bottom: 1em;
-      text-align: center; max-width: 90%;
+      padding: 1em; font-size: 1.8em; font-weight: bold;
     }
     #controls {
       display: flex; flex-direction: column;
       align-items: center; gap: 1em; margin-bottom: 1em;
     }
-    input[type="file"] {
-      padding: 0.5em; font-size: 1em;
-      background-color: #1f1f1f; color: #fff;
-      border: 1px solid #00f; border-radius: 6px;
-    }
-    button {
-      padding: 0.8em 2em; font-size: 1.1em;
+    input[type="file"], button {
+      padding: 0.8em 1.5em; font-size: 1em;
       background-color: #1f1f1f; color: #fff;
       border: 2px solid #00f; border-radius: 8px;
       cursor: pointer;
@@ -44,13 +33,9 @@
       animation: wave 1s infinite linear;
       display: none;
     }
-    @keyframes wave {
-      0% { background-position: 0 0; }
-      100% { background-position: 100% 0; }
-    }
     #response {
-      margin: 1em; font-size: 1.2em;
-      text-align: center; max-width: 90%;
+      margin: 1em; font-size: 1.2em; text-align: center;
+      max-width: 90%;
     }
     #chart-container {
       width: 90%; max-width: 1000px;
@@ -64,7 +49,6 @@
 </head>
 <body>
   <header>📊 Sanita Paketleme Veri Analiz Robotu</header>
-  <p id="welcome">Ben Sanita Paketleme Veri Analiz Robotuyum. Lütfen, incelemek istediğiniz dosyayı yükleyiniz.</p>
   <div id="controls">
     <input type="file" id="excelFile" accept=".xlsx" />
     <button onclick="startListening()">🎤 Mikrofonu Başlat</button>
@@ -74,13 +58,11 @@
   <div id="chart-container"><canvas id="chart"></canvas></div>
 
   <script>
-    const OPENAI_API_KEY = "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";
+    const OPENAI_API_KEY = "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";
     let excelData = [];
 
     window.onload = () => {
-      setTimeout(() => {
-        speak("Ben Sanita Paketleme Veri Analiz Robotuyum. Lütfen, incelemek istediğiniz dosyayı yükleyiniz.");
-      }, 1000);
+      speak("Merhaba, ben Sanita Paketleme Veri Analiz Robotuyum. Lütfen Excel dosyanızı yükleyiniz.");
     };
 
     document.getElementById("excelFile").addEventListener("change", (e) => {
@@ -90,10 +72,7 @@
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         excelData = XLSX.utils.sheet_to_json(sheet);
-        speak("Dosya yüklendi başarılı.");
-        setTimeout(() => {
-          speak("Soru sormak için Mikrofonu Başlat butonuna basınız.");
-        }, 1500);
+        speak("Dosya yüklendi başarılı. Soru sormak için Mikrofonu Başlat butonuna basınız.");
       };
       reader.readAsBinaryString(e.target.files[0]);
     });
