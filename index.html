@@ -2,153 +2,289 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Sanita Sesli Asistan</title>
+  <title>Sanita Sesli Veri Asistanı</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
+    html, body {
       margin: 0; padding: 0;
-      background: radial-gradient(circle at top, #1b2735, #090a0f);
-      color: white;
-      font-family: "Segoe UI", sans-serif;
-      text-align: center;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      height: 100vh; overflow-x: hidden;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-start;
     }
-    h1 {
-      font-size: 2em;
-      margin-bottom: 1em;
-      text-shadow: 0 0 10px #00bcd4;
+    header {
+      font-size: 1.8em; font-weight: bold;
+      margin: 1em 0 0.5em 0; text-align: center;
     }
-    #mic {
-      background: #00bcd4;
-      border: none;
-      color: white;
-      font-size: 1.2em;
+    #mic-button {
+      margin-top: 1em;
       padding: 1em 2em;
-      border-radius: 50px;
+      font-size: 1em;
+      background-color: #00bcd4;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
-      transition: 0.3s;
-      box-shadow: 0 0 20px #00bcd4;
-    }
-    #mic:hover {
-      background: #0097a7;
-      box-shadow: 0 0 30px #00e5ff;
+      box-shadow: 0 0 10px #00bcd4;
     }
     #wave {
-      width: 70px; height: 70px;
       margin-top: 1em;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       background: radial-gradient(circle, #00bcd4 40%, transparent 70%);
+      transition: transform 0.1s ease-out;
       display: none;
-      transition: transform 0.1s ease;
     }
     #response {
-      margin-top: 2em;
-      max-width: 90%;
-      font-size: 1.2em;
-      opacity: 0.9;
+      margin-top: 2em; font-size: 1.2em;
+      text-align: center; max-width: 90%;
+      animation: fadeIn 2s ease-in-out;
+      white-space: pre-line;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #chart-container {
+      width: 90%; max-width: 1000px;
+      height: 400px; margin-top: 2em;
+    }
+    canvas {
+      width: 100% !important; height: 100% !important;
+      background-color: #fff; border-radius: 8px;
     }
   </style>
 </head>
 <body>
-  <h1>🎙️ Sanita Sesli Asistan</h1>
-  <button id="mic">🎤 Soru Sor</button>
+  <header>🎙️ Sanita Sesli Veri Asistanı</header>
+  <button id="mic-button">🎤 Soru Sor</button>
   <div id="wave"></div>
   <div id="response"></div>
+  <div id="chart-container"><canvas id="chart"></canvas></div>
+<script>
+  const excelData = [
+    {FIRMA:"SEKERCI", URUN:"PUL BIBER", URETIM:1200, HAMMADDE:"KIRMIZI BIBER", HAMMADDE_MIKTARI:300, TARIH:"10 Ekim", CALISAN:5},
+    {FIRMA:"SEKERCI", URUN:"PUL BIBER", URETIM:800, HAMMADDE:"TUZ", HAMMADDE_MIKTARI:50, TARIH:"10 Ekim", CALISAN:5},
+    {FIRMA:"SEKERCI", URUN:"LOKUM", URETIM:500, HAMMADDE:"NISASTA", HAMMADDE_MIKTARI:200, TARIH:"11 Ekim", CALISAN:4},
+    {FIRMA:"PAKETLEME", URUN:"PUL BIBER", URETIM:1000, HAMMADDE:"KIRMIZI BIBER", HAMMADDE_MIKTARI:250, TARIH:"10 Ekim", CALISAN:3},
+    {FIRMA:"PAKETLEME", URUN:"LOKUM", URETIM:600, HAMMADDE:"NISASTA", HAMMADDE_MIKTARI:180, TARIH:"11 Ekim", CALISAN:3}
+  ];
 
-  <script>
-    // Eğer OpenAI API anahtarı kullanmak istersen buraya ekle:
-    // const OPENAI_KEY = "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";
-    const OPENAI_KEY = ""; // Boş kalırsa sadece tarayıcı TTS yanıt verir.
+  function speak(text) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "tr-TR";
+    speechSynthesis.speak(utterance);
+  }
 
-    // Tarayıcı konuşsun
-    function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "tr-TR";
-      utterance.rate = 1;
-      speechSynthesis.speak(utterance);
-    }
+  window.onload = () => {
+    speak("Merhaba, ben Sanita'nın sesli veri asistanıyım. Size nasıl yardımcı olabilirim?");
+  };
 
-    // Sayfa yüklenince hoş geldin mesajı
-    window.addEventListener("load", () => {
-      speak("Hoş geldiniz! Ben Sanita sesli asistanıyım. Sormak istediğiniz bir şey var mı?");
+  document.getElementById("mic-button").onclick = () => {
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "tr-TR";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.start();
+    speak("Dinliyorum, lütfen sorunuzu sorun.");
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      const audioContext = new AudioContext();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      source.connect(analyser);
+
+      function animateWave() {
+        analyser.getByteFrequencyData(dataArray);
+        const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
+        const scale = Math.min(2, Math.max(1, volume / 30));
+        document.getElementById("wave").style.transform = `scale(${scale})`;
+        requestAnimationFrame(animateWave);
+      }
+
+      document.getElementById("wave").style.display = "block";
+      animateWave();
     });
 
-    // Mikrofon butonu
-    const micBtn = document.getElementById("mic");
-    const wave = document.getElementById("wave");
-    const responseDiv = document.getElementById("response");
-
-    micBtn.onclick = async () => {
-      if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-        alert("Tarayıcınız sesli komut desteklemiyor.");
-        return;
-      }
-
-      // Mikrofon izni al
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch (err) {
-        alert("Lütfen mikrofon erişimine izin verin.");
-        return;
-      }
-
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = "tr-TR";
-      recognition.interimResults = false;
-      recognition.start();
-      speak("Dinliyorum, lütfen sorunuzu sorun.");
-      wave.style.display = "block";
-
-      recognition.onresult = async (event) => {
-        const query = event.results[0][0].transcript;
-        responseDiv.innerText = "Soru: " + query;
-        wave.style.display = "none";
-
-        // Eğer API anahtarı varsa OpenAI'den yanıt al
-        if (OPENAI_KEY) {
-          try {
-            const result = await fetch("https://api.openai.com/v1/chat/completions", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${OPENAI_KEY}`,
-              },
-              body: JSON.stringify({
-                model: "gpt-4o-mini",
-                messages: [{ role: "user", content: query }],
-              }),
-            });
-            const data = await result.json();
-            const answer = data.choices?.[0]?.message?.content || "Bir yanıt alınamadı.";
-            responseDiv.innerText += "\nYanıt: " + answer;
-            speak(answer);
-          } catch (err) {
-            responseDiv.innerText += "\nOpenAI bağlantı hatası.";
-            speak("Yanıt alınamadı.");
-          }
-        } else {
-          // Yerel tarayıcı yanıtı (örnek)
-          let localAnswer = "Sorunuzu anlayamadım.";
-          if (query.includes("nasılsın")) localAnswer = "Teşekkür ederim, gayet iyiyim!";
-          else if (query.includes("hava")) localAnswer = "Bugün hava çok güzel görünüyor!";
-          else if (query.includes("saat")) localAnswer = "Şu anda saat " + new Date().toLocaleTimeString("tr-TR");
-          responseDiv.innerText += "\nYanıt: " + localAnswer;
-          speak(localAnswer);
-        }
-      };
-
-      recognition.onerror = () => {
-        wave.style.display = "none";
-        speak("Bir hata oluştu, tekrar deneyin.");
-      };
-      recognition.onend = () => {
-        wave.style.display = "none";
-      };
+    recognition.onresult = function (event) {
+      const query = event.results[0][0].transcript.toLowerCase().trim();
+      document.getElementById("response").innerText = "Soru: " + query;
+      processQuery(query);
     };
-  </script>
+
+    recognition.onerror = function () {
+      document.getElementById("wave").style.display = "none";
+      document.getElementById("wave").style.transform = "scale(1)";
+    };
+
+    recognition.onend = function () {
+      document.getElementById("wave").style.display = "none";
+      document.getElementById("wave").style.transform = "scale(1)";
+    };
+  };
+</script>
+function processQuery(query) {
+  query = query.replace("sanita", "").trim();
+   if (query.includes("detaylı açıklama") || query.includes("openai") || query.includes("asistan")) {
+  getOpenAIResponse(query);
+  return;
+}
+
+
+  const sohbetYanıtları = {
+    "nasılsın": "Çok iyiyim, sizin için buradayım.",
+    "iyi misin": "Harikayım, size yardımcı olmak için hazırım.",
+    "burada mısın": "Evet, buradayım ve sizi dinliyorum.",
+    "teşekkürler": "Rica ederim, her zaman buradayım.",
+    "merhaba": "Merhaba, nasıl yardımcı olabilirim?",
+    "hoşça kal": "Görüşmek üzere, iyi çalışmalar."
+  };
+
+  for (let anahtar in sohbetYanıtları) {
+    if (query.includes(anahtar)) {
+      const mesaj = sohbetYanıtları[anahtar];
+      document.getElementById("response").innerText += "\nYanıt: " + mesaj;
+      speak(mesaj);
+      return;
+    }
+  }
+
+  const olasiSorgular = [
+    "Pul biber için toplam üretim ne kadar",
+    "10 Ekim'de ne üretildi",
+    "Paketlemede kaç kişi çalıştı",
+    "Tarihe göre üretim grafiği göster",
+    "Lokum için kullanılan toplam hammadde miktarı nedir",
+    "En çok üretim yapan firma hangisi",
+    "Ürünlere göre ortalama üretim miktarı nedir"
+  ];
+
+  let enYakin = olasiSorgular.find(s => query.split(" ").some(kelime => s.toLowerCase().includes(kelime)));
+  if (!enYakin) {
+    const mesaj = "Sorunuzu anlayamadım. Lütfen tekrar eder misiniz?";
+    document.getElementById("response").innerText += "\nYanıt: " + mesaj;
+    speak(mesaj);
+    return;
+  }
+
+  if (!query.includes("üretim") && !query.includes("grafik") && !query.includes("hammadde") && !query.includes("çalışan")) {
+    const mesaj = `Bunu mu demek istediniz: "${enYakin}"? Evet mi, hayır mı?`;
+    document.getElementById("response").innerText += "\nYanıt: " + mesaj;
+    speak(mesaj);
+
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    recognition.lang = "tr-TR";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.start();
+
+    recognition.onresult = function (event) {
+      const cevap = event.results[0][0].transcript.toLowerCase();
+      if (cevap.includes("evet")) {
+        processQuery(enYakin.toLowerCase());
+      } else {
+        speak("Lütfen sorunuzu tekrar edin.");
+      }
+    };
+    return;
+  }
+
+  let filtered = [...excelData];
+  const firma = query.includes("sekerci") ? "SEKERCI" :
+                query.includes("paketleme") ? "PAKETLEME" : null;
+  const urun = query.includes("pul") && query.includes("biber") ? "PUL BIBER" :
+               query.includes("lokum") ? "LOKUM" : null;
+  const tarihMatch = query.match(/\d{1,2}\s?[a-zçğıöşü]{3,9}/i);
+  const tarih = tarihMatch ? tarihMatch[0].toUpperCase() : null;
+
+  if (firma) filtered = filtered.filter(r => r["FIRMA"] === firma);
+  if (urun) filtered = filtered.filter(r => r["URUN"] === urun);
+  if (tarih) filtered = filtered.filter(r => r["TARIH"].toUpperCase().includes(tarih));
+
+  let toplamUretim = 0, toplamHammadde = 0, toplamCalisan = 0;
+  filtered.forEach(row => {
+    toplamUretim += row["URETIM"] || 0;
+    toplamHammadde += row["HAMMADDE_MIKTARI"] || 0;
+    toplamCalisan += row["CALISAN"] || 0;
+  });
+
+  let mesaj = "";
+  if (query.includes("grafik")) {
+    drawChart(filtered);
+    mesaj = "Grafik gösteriliyor.";
+  } else if (query.includes("çalışan")) {
+    mesaj = `Toplam çalışan sayısı: ${toplamCalisan}`;
+  } else if (query.includes("ortalama")) {
+    const ort = (toplamUretim / filtered.length).toFixed(2);
+    mesaj = `Ortalama üretim miktarı: ${ort} birim`;
+  } else if (query.includes("hammadde")) {
+    mesaj = `Toplam kullanılan hammadde miktarı: ${toplamHammadde} kg`;
+  } else {
+    mesaj = `Toplam üretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Çalışan sayısı: ${toplamCalisan}`;
+  }
+
+  document.getElementById("response").innerText += "\nYanıt: " + mesaj;
+  speak(mesaj);
+}
+
+function drawChart(data) {
+  const ctx = document.getElementById("chart").getContext("2d");
+  if (window.barChart) window.barChart.destroy();
+
+  const grouped = {};
+  data.forEach(row => {
+    if (!grouped[row.TARIH]) grouped[row.TARIH] = 0;
+    grouped[row.TARIH] += row.URETIM;
+  });
+
+  const labels = Object.keys(grouped);
+  const values = Object.values(grouped);
+
+  window.barChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Üretim Miktarı",
+        data: values,
+        backgroundColor: "#00bcd4"
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
+}
+</script>
 </body>
 </html>
+const OPENAI_API_KEY = "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"; // Buraya kendi OpenAI anahtarını ekle
 
+async function getOpenAIResponse(prompt) {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7
+    })
+  });
+
+  const data = await response.json();
+  const reply = data.choices?.[0]?.message?.content || "Yanıt alınamadı.";
+  document.getElementById("response").innerText += "\nYanıt: " + reply;
+  speak(reply);
+}
