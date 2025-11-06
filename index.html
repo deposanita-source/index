@@ -1,290 +1,366 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Sanita Sesli Veri Asistanı</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    html, body {
-      margin: 0; padding: 0;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      height: 100vh; overflow-x: hidden;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-start;
-    }
-    header {
-      font-size: 1.8em; font-weight: bold;
-      margin: 1em 0 0.5em 0; text-align: center;
-    }
-    #mic-button {
-      margin-top: 1em;
-      padding: 1em 2em;
-      font-size: 1em;
-      background-color: #00bcd4;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 0 10px #00bcd4;
-    }
-    #wave {
-      margin-top: 1em;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: radial-gradient(circle, #00bcd4 40%, transparent 70%);
-      transition: transform 0.1s ease-out;
-      display: none;
-    }
-    #response {
-      margin-top: 2em; font-size: 1.2em;
-      text-align: center; max-width: 90%;
-      animation: fadeIn 2s ease-in-out;
-      white-space: pre-line;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    #chart-container {
-      width: 90%; max-width: 1000px;
-      height: 400px; margin-top: 2em;
-    }
-    canvas {
-      width: 100% !important; height: 100% !important;
-      background-color: #fff; border-radius: 8px;
-    }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SANITA - EKIM KUMULATIF ASISTAN</title>
+<style>
+  :root{--bg:#020812;--card:#071526;--accent:#22e6c2;--muted:#9fb3ad}
+  *{box-sizing:border-box}
+  body{margin:0;height:100vh;background:linear-gradient(180deg,#000814,#001e2e);font-family:Inter,system-ui,Segoe UI,Arial;color:#e8ffff;display:flex;align-items:center;justify-content:center;padding:18px}
+  .card{width:920px;max-width:96%;border-radius:14px;padding:20px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 40px 100px rgba(0,0,0,0.7);border:1px solid rgba(255,255,255,0.03)}
+  .title{font-weight:800;color:var(--accent);font-size:18px;text-align:center}
+  .top{display:flex;align-items:center;justify-content:center;gap:20px;margin-top:14px;flex-direction:column}
+  .micOuter{position:relative;width:170px;height:170px;border-radius:999px;display:flex;align-items:center;justify-content:center;margin-top:8px}
+  .ring{position:absolute;width:320px;height:320px;border-radius:999px;left:50%;transform:translateX(-50%) scale(.9);pointer-events:none;opacity:0;transition:opacity .12s,transform .25s}
+  .ring.on{opacity:1;transform:translateX(-50%) scale(1);animation:ringPulse 1.6s infinite}
+  @keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(34,230,194,0.12)}60%{box-shadow:0 0 0 36px rgba(34,230,194,0)}100%{box-shadow:0 0 0 0 rgba(34,230,194,0)}}
+  .micBtn{width:130px;height:130px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,var(--accent),#35d6a6);color:#042018;font-size:40px;font-weight:800;cursor:pointer;box-shadow:0 20px 50px rgba(0,0,0,0.45)}
+  .wave{width:340px;height:84px;margin-top:12px;display:flex;align-items:flex-end;gap:7px;opacity:0;transition:opacity .12s}
+  .bar{width:9px;background:linear-gradient(180deg,var(--accent),#34d399);border-radius:4px;height:12px;transition:height .06s}
+  .transcript{margin-top:14px;color:#dff8f0;font-size:15px;text-align:center;min-height:48px}
+  .responseBox{margin-top:14px;padding:14px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);min-height:140px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+  .resText{font-size:18px;line-height:1.5;text-align:center;color:#e6fff4;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .45s;max-width:92%}
+  .resText.show{opacity:1;transform:translateY(0)}
+  .shine{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(255,255,255,0.01),rgba(255,255,255,0.06),rgba(255,255,255,0.01));transform:translateX(-120%);opacity:.06;transition:transform 1.2s}
+  .shine.run{transform:translateX(120%)}
+  .small{font-size:13px;color:var(--muted);text-align:center;margin-top:8px}
+  @media (max-width:640px){ .micBtn{width:110px;height:110px;font-size:34px} .wave{width:260px} .card{padding:12px} }
+</style>
 </head>
 <body>
-  <header>🎙️ Sanita Sesli Veri Asistanı</header>
-  <button id="mic-button">🎤 Soru Sor</button>
-  <div id="wave"></div>
-  <div id="response"></div>
-  <div id="chart-container"><canvas id="chart"></canvas></div>
+  <div class="card" role="main" aria-label="Sanita Paketleme Bilgi Asistani">
+    <div class="title">SANITA PAKETLEME BILGI ASISTANI</div>
+
+    <div class="top">
+      <div class="micOuter">
+        <div id="ring" class="ring" aria-hidden="true"></div>
+        <div id="micBtn" class="micBtn" role="button" title="Dinle">🎤</div>
+      </div>
+      <div id="wave" class="wave" aria-hidden="true">
+        <div class="bar" style="height:8px"></div><div class="bar" style="height:12px"></div><div class="bar" style="height:10px"></div>
+        <div class="bar" style="height:14px"></div><div class="bar" style="height:9px"></div><div class="bar" style="height:11px"></div>
+        <div class="bar" style="height:8px"></div><div class="bar" style="height:10px"></div>
+      </div>
+    </div>
+
+    <div id="transcript" class="transcript">Mikrofona dokunun ve sorun. (Konuşmanız burada görünecek.)</div>
+
+    <div class="responseBox">
+      <div id="resText" class="resText">Cevap burada görünecek.</div>
+      <div id="shine" class="shine"></div>
+    </div>
+
+    <div class="small">Not: Bu sayfa gömülü Ekim kümülatif verisi ile çalışır. Mikrofon izni isteği tarayıcı tarafından gösterilecektir.</div>
+  </div>
+
 <script>
-  const excelData = [
-    {FIRMA:"SEKERCI", URUN:"PUL BIBER", URETIM:1200, HAMMADDE:"KIRMIZI BIBER", HAMMADDE_MIKTARI:300, TARIH:"10 Ekim", CALISAN:5},
-    {FIRMA:"SEKERCI", URUN:"PUL BIBER", URETIM:800, HAMMADDE:"TUZ", HAMMADDE_MIKTARI:50, TARIH:"10 Ekim", CALISAN:5},
-    {FIRMA:"SEKERCI", URUN:"LOKUM", URETIM:500, HAMMADDE:"NISASTA", HAMMADDE_MIKTARI:200, TARIH:"11 Ekim", CALISAN:4},
-    {FIRMA:"PAKETLEME", URUN:"PUL BIBER", URETIM:1000, HAMMADDE:"KIRMIZI BIBER", HAMMADDE_MIKTARI:250, TARIH:"10 Ekim", CALISAN:3},
-    {FIRMA:"PAKETLEME", URUN:"LOKUM", URETIM:600, HAMMADDE:"NISASTA", HAMMADDE_MIKTARI:180, TARIH:"11 Ekim", CALISAN:3}
-  ];
+/* ================== GOMULU OPENAI ANAHTARI BOŞ BIRAKILDI (OPSİYONEL) ==================
+   Eğer OpenAI'den gelişmiş doğal dil sonucu almak istersen buraya anahtar göm (risk kabulü).
+   const OPENAI_API_KEY = "sk-..."; 
+   Aşağıdaki kod otomatik olarak yerel mantıkla cevap verir; yetersizse OpenAI'ye sorar. */
+const OPENAI_API_KEY = ""; // istersen buraya sk-... koy (gizlilik riski olur)
 
-  function speak(text) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "tr-TR";
-    speechSynthesis.speak(utterance);
+/* ================== GOMULU VERI (EKIM KUMULATIF) ==================
+   Bu veri, sizden gelen özet tabloya dayanarak gömülmüştür (firma toplamları ve ham miktarlar).
+   Daha ayrıntılı gün bazlı veri gönderirsen (excel) onu da gömebilirim ve date-filtresi etkin olur.
+*/
+const KUM = [
+  {"FIRMA":"SOFRA","URETIM":31477,"HAM_MIK":29055.17},
+  {"FIRMA":"KERVAN","URETIM":764,"HAM_MIK":764},
+  {"FIRMA":"RECEP CAN","URETIM":1952,"HAM_MIK":4760.07},
+  {"FIRMA":"EVERGREEN","URETIM":48122,"HAM_MIK":9921.44},
+  {"FIRMA":"BEDIR TEDARIK","URETIM":1964,"HAM_MIK":1702.3},
+  {"FIRMA":"ONEN GIDA","URETIM":100,"HAM_MIK":100},
+  {"FIRMA":"CELIK NATUREL","URETIM":100,"HAM_MIK":100},
+  {"FIRMA":"SEKERCI","URETIM":10484,"HAM_MIK":11828.14},
+  {"FIRMA":"GENIM GIDA","URETIM":5173,"HAM_MIK":4760.51},
+  {"FIRMA":"AKAR FOOD","URETIM":11454,"HAM_MIK":1170.48},
+  {"FIRMA":"MAUN GIDA","URETIM":550,"HAM_MIK":550},
+  {"FIRMA":"VENUS","URETIM":3660,"HAM_MIK":2579},
+  {"FIRMA":"ANADOLU UNIVERSITESI","URETIM":340,"HAM_MIK":310},
+  {"FIRMA":"EKOL FOOD","URETIM":864,"HAM_MIK":723},
+  {"FIRMA":"SANITA EVERGREEN","URETIM":672,"HAM_MIK":336},
+  {"FIRMA":"MESA","URETIM":70990,"HAM_MIK":9804.16},
+  {"FIRMA":"CASH&CARRY","URETIM":13522,"HAM_MIK":15307.8},
+  {"FIRMA":"BORTAR","URETIM":797,"HAM_MIK":703.5},
+  {"FIRMA":"VKS","URETIM":1794,"HAM_MIK":1002},
+  {"FIRMA":"HABIP ALBAYRAK","URETIM":1086,"HAM_MIK":1008.15},
+  {"FIRMA":"FATSAT","URETIM":320,"HAM_MIK":320},
+  {"FIRMA":"NIOLES","URETIM":750,"HAM_MIK":340.65},
+  {"FIRMA":"SALEH","URETIM":4224,"HAM_MIK":1024.32},
+  {"FIRMA":"KIRCICEGI","URETIM":50,"HAM_MIK":50},
+  {"FIRMA":"MAYA CATERING","URETIM":42,"HAM_MIK":36},
+  {"FIRMA":"T DONER","URETIM":500,"HAM_MIK":50},
+  {"FIRMA":"FRESH FOOD","URETIM":50,"HAM_MIK":50},
+  {"FIRMA":"EGES YEMEK","URETIM":190,"HAM_MIK":190}
+];
+
+/* aylik ozet (gönderdiğin özet veriye göre) */
+const SUMMARY = {
+  KISI_SAYISI: 418,
+  CALISMA_SURESI: 951.75,
+  URETIM_MIKTARI: 212571,
+  TOPLAM_HAM: 99126.68,
+  HAMMADDE_FIRE: 5.48,
+  OMK_FIRE: 28,
+  OPP_FIRE: 15.8
+};
+
+/* ===== DOM ===== */
+const micBtn = document.getElementById('micBtn');
+const ring = document.getElementById('ring');
+const wave = document.getElementById('wave');
+const transcript = document.getElementById('transcript');
+const resText = document.getElementById('resText');
+const shine = document.getElementById('shine');
+const bars = Array.from(document.querySelectorAll('.bar'));
+
+/* ===== helpers ===== */
+function fmt(n){ return (typeof n==='number') ? n.toLocaleString('tr-TR') : String(n); }
+function speak(text){
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'tr-TR';
+    const vs = speechSynthesis.getVoices();
+    if(vs && vs.length){
+      const tr = vs.find(v=> v.lang && v.lang.toLowerCase().startsWith('tr'));
+      if(tr) u.voice = tr;
+    }
+    u.rate = 1; u.pitch = 1;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){ console.warn('TTS', e); }
+}
+function showResp(txt){ resText.classList.remove('show'); resText.innerText=''; setTimeout(()=>{ resText.innerText = txt; resText.classList.add('show'); shine.classList.remove('run'); void shine.offsetWidth; shine.classList.add('run'); }, 80); }
+
+/* ===== analyser visuals ===== */
+let audioContext, sourceNode, analyser, animFrame;
+function startAnalyser(stream){
+  if(!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  if(sourceNode) sourceNode.disconnect();
+  sourceNode = audioContext.createMediaStreamSource(stream);
+  analyser = audioContext.createAnalyser();
+  analyser.fftSize = 256;
+  sourceNode.connect(analyser);
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  function frame(){
+    analyser.getByteFrequencyData(data);
+    for(let i=0;i<bars.length;i++){
+      const v = data[i*2] || 0;
+      const h = 8 + Math.round(v/6);
+      bars[i].style.height = Math.max(8, Math.min(140, h)) + 'px';
+    }
+    animFrame = requestAnimationFrame(frame);
+  }
+  frame();
+}
+function stopAnalyser(){ if(animFrame) cancelAnimationFrame(animFrame); animFrame=null; if(analyser){analyser.disconnect();analyser=null;} if(sourceNode){sourceNode.disconnect();sourceNode=null;} bars.forEach(b=> b.style.height='8px'); }
+
+/* ===== speech recognition setup ===== */
+let recognition = null;
+function setupRecognition(){
+  if(!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)){
+    transcript.innerText = 'Tarayıcı ses tanımayı desteklemiyor. Lütfen Chrome kullanın.';
+    return false;
+  }
+  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new Rec();
+  recognition.lang = 'tr-TR';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = ()=> { ring.classList.add('on'); wave.style.opacity='1'; transcript.innerText = 'DINLENIYOR...'; };
+  recognition.onresult = (ev)=> {
+    const text = ev.results[0][0].transcript;
+    transcript.innerText = 'SORDUN: ' + text;
+    ring.classList.remove('on'); wave.style.opacity='0'; stopAnalyser();
+    processQuestion(text);
+  };
+  recognition.onerror = (e)=> {
+    console.warn('rec err', e);
+    transcript.innerText = (e.error==='not-allowed') ? 'Mikrofon izni engellendi.' : 'Ses algılama hatası.';
+    ring.classList.remove('on'); wave.style.opacity='0'; stopAnalyser();
+  };
+  recognition.onend = ()=> { ring.classList.remove('on'); wave.style.opacity='0'; stopAnalyser(); };
+  return true;
+}
+
+/* ===== ensure mic + notification ===== */
+async function ensureMic(){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    startAnalyser(stream);
+    try{ if("Notification" in window && Notification.permission==='default') await Notification.requestPermission(); }catch(e){}
+    if("Notification" in window && Notification.permission==='granted') new Notification('Mikrofon izin verildi', {body:'Sanita sizi dinleyebilir.'});
+    return stream;
+  }catch(e){
+    console.warn('getUserMedia err', e);
+    transcript.innerText = 'Mikrofon izni verilmedi. Site ayarlarından açın.';
+    return null;
+  }
+}
+
+/* ===== local NLU (data-driven) ===== */
+function localAnswer(q){
+  const t = q.toLowerCase();
+
+  // 1) Firma üretim toplamı
+  for(const r of KUM){
+    const name = r.FIRMA.toLowerCase();
+    // check tokens
+    const tokens = name.split(/[\s&\-_.]+/).filter(Boolean);
+    for(const tk of tokens){
+      if(t.includes(tk) && tk.length>2){
+        return `${r.FIRMA.toUpperCase()} için toplam üretim ${fmt(r.URETIM)} adet. Kullanılan hammadde: ${fmt(r.HAM_MIK)} kg.`;
+      }
+    }
   }
 
-  window.onload = () => {
-    speak("Merhaba, ben Sanita'nın sesli veri asistanıyım. Size nasıl yardımcı olabilirim?");
-  };
+  // 2) ŞEKERCİ için karabiber gibi özel madde sorgusu
+  if(t.includes('karabiber')){
+    // we don't have ingredient-level breakdown in the embedded summary
+    return `Gömülü özet veri sadece firma toplamlarını içeriyor; 'karabiber' gibi spesifik hammadde bazlı detaylar satır satır kayıtlı değil. Eğer gün bazlı hammadde detayı varsa onu gömersen detaylı cevap veririm.`;
+  }
 
-  document.getElementById("mic-button").onclick = () => {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = "tr-TR";
-    recognition.interimResults = false;
-    recognition.continuous = false;
+  // 3) Tarih bazlı (gün) çalışan sayısı - not available here
+  const dateMatch = t.match(/(\d{1,2})\s*ekim/);
+  if(dateMatch){
+    const day = Number(dateMatch[1]);
+    // embedded dataset is monthly totals per firma, not günlük kayıtlar
+    return `Dosyada günlük (ör. ${day} Ekim) bazlı çalışan veya ürün adedi kayıtları gömülü değil. Detaylı günlük kayıt sağlarsan o tarihe ait kişi sayısı, ürün ve fireyi çıkarırım.`;
+  }
 
-    recognition.start();
-    speak("Dinliyorum, lütfen sorunuzu sorun.");
+  // 4) Toplam pul biber miktarı (search ham_mik by product? Not in summary)
+  if(t.includes('pul biber') || t.includes('pulbiber') || t.includes('pul-biber') ){
+    // we don't have product-level hammadde mapping in this summary
+    return `Gömülü özet yalnızca firma toplamları içeriyor; ürün düzeyinde (ör. \"pul biber\") hammadde kullanımı için ayrıntılı satır verisi gerekli. Dilersen o ayrıntılı Excel'i gömüp hesaplayayım.`;
+  }
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      const audioContext = new AudioContext();
-      const source = audioContext.createMediaStreamSource(stream);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      const dataArray = new Uint8Array(analyser.frequencyBinCount);
-      source.connect(analyser);
+  // 5) Ekim ayı toplam hammadde
+  if((t.includes('toplam') && (t.includes('hammadde')||t.includes('ham')) ) || t.includes('toplam hammadde')){
+    return `Ekim ayında toplam kullanılan hammadde: ${fmt(SUMMARY.TOPLAM_HAM)} kg.`;
+  }
 
-      function animateWave() {
-        analyser.getByteFrequencyData(dataArray);
-        const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
-        const scale = Math.min(2, Math.max(1, volume / 30));
-        document.getElementById("wave").style.transform = `scale(${scale})`;
-        requestAnimationFrame(animateWave);
-      }
+  // 6) Kaç farklı firma
+  if(t.includes('kaç') && t.includes('firma')){
+    return `Toplam ${KUM.length} farklı firmayla çalışılmış.`;
+  }
 
-      document.getElementById("wave").style.display = "block";
-      animateWave();
+  // 7) Toplam kullanılan hammadde miktarı
+  if(t.includes('toplam kullan') && t.includes('hammadde')) {
+    return `Toplam kullanılan hammadde miktarı: ${fmt(SUMMARY.TOPLAM_HAM)} kg.`;
+  }
+
+  // 8) En çok hangi hammadde kullandım? -> not available in summary
+  if(t.includes('en çok') && t.includes('hammadde')){
+    // We can say which firma kullandı en cok hammadde
+    const map = {};
+    KUM.forEach(r=> map[r.FIRMA] = (map[r.FIRMA]||0) + (Number(r.HAM_MIK)||0));
+    const sorted = Object.entries(map).sort((a,b)=> b[1]-a[1]);
+    if(sorted.length) return `Özet veriye göre en çok hammadde kullanan firma ${sorted[0][0]}, toplam ${fmt(sorted[0][1])} kg. (Hammadde türleri özet veri içinde ayrı değil.)`;
+  }
+
+  // 9) Toplam üretim (tüm firma)
+  if((t.includes('toplam') && t.includes('uretim')) || t.includes('toplam üretim')){
+    const total = KUM.reduce((s,r)=> s + (Number(r.URETIM)||0), 0);
+    return `Aylık toplam üretim: ${fmt(total)} adet.`;
+  }
+
+  // 10) En çok üretim yapılan firma
+  if(t.includes('en çok') && t.includes('üretim')){
+    const arr = KUM.slice().sort((a,b)=> b.URETIM - a.URETIM);
+    if(arr.length) return `En çok üretim yapılan firma ${arr[0].FIRMA}, toplam ${fmt(arr[0].URETIM)} adet.`;
+  }
+
+  // 11) Toplam çalışma süresi
+  if(t.includes('çalışma süresi') || (t.includes('çalışma') && t.includes('süre'))){
+    return `Toplam çalışma süresi: ${fmt(SUMMARY.CALISMA_SURESI)} saat.`;
+  }
+
+  // 12) Belirli tarih (5 Ekim) kaç saat çalışıldı -> not in summary
+  if(t.includes('5 ekim') && t.includes('saat')){
+    return `Gömülü veride günlük çalışma saatleri yok. Günlük saat bilgisi varsa onu gömersen 5 Ekim için çıkarırım.`;
+  }
+
+  // 13) Fireler (HAMMADDE - OPP - OMK)
+  if(t.includes('fire') || t.includes('fır') || t.includes('fır%' )){
+    return `Aylık özet: Hammadde fire: ${fmt(SUMMARY.HAMMADDE_FIRE)}, OMK (koli) fire: ${fmt(SUMMARY.OMK_FIRE)}, OPP (bobin) fire: ${fmt(SUMMARY.OPP_FIRE)}. (Birimler özette belirtildiği gibi.)`;
+  }
+
+  // 14) En çok fire veren ürün -> need product-level fire data which is not in summary
+  if(t.includes('en çok') && t.includes('fire') && t.includes('ürün')){
+    return `Ürün bazlı fire verisi gömülü özet içinde yok; detaylı satır veri sağlarsan hangi ürünün en çok fire verdiğini hesaplarım.`;
+  }
+
+  // 15) 9 Ekim detay (ürün, firma, hammadde, kişi, fire, süre) -> not in summary
+  if(t.includes('9 ekim') || (t.match(/\d{1,2}\s?ekim/))){
+    return `Detaylı günlük üretim raporu gömülü değil. Eğer ham satır veriyi (tarih, firma, ürün, hammadde, miktar, kişi, fire, süre) paylaşırsan 9 Ekim için tam listeyi çıkarırım.`;
+  }
+
+  // If not matched, return null to fallback to OpenAI if available
+  return null;
+}
+
+/* ===== OpenAI fallback (if key provided) ===== */
+async function askOpenAI(q){
+  if(!OPENAI_API_KEY || !OPENAI_API_KEY.startsWith('sk-')) return null;
+  try{
+    const prompt = `Kullanici soru (Turkce): "${q}". Veri seti: FIRMA, URETIM, HAM_MIK (ekim ayina ait). Eger cevap veriyle hesaplanabiliyorsa dogrudan sayisal sonuc ver. Kisa ve net turkce cevap ver.`;
+    const body = {
+      model: "gpt-4o-mini",
+      messages: [{role:"system", content:"Turkce veri analizi asistani"}, {role:"user", content:prompt}],
+      max_tokens: 600
+    };
+    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+      method:'POST',
+      headers: {'Content-Type':'application/json', 'Authorization':'Bearer '+OPENAI_API_KEY},
+      body: JSON.stringify(body)
     });
-
-    recognition.onresult = function (event) {
-      const query = event.results[0][0].transcript.toLowerCase().trim();
-      document.getElementById("response").innerText = "Soru: " + query;
-      processQuery(query);
-    };
-
-    recognition.onerror = function () {
-      document.getElementById("wave").style.display = "none";
-      document.getElementById("wave").style.transform = "scale(1)";
-    };
-
-    recognition.onend = function () {
-      document.getElementById("wave").style.display = "none";
-      document.getElementById("wave").style.transform = "scale(1)";
-    };
-  };
-</script>
-function processQuery(query) {
-  query = query.replace("sanita", "").trim();
-   if (query.includes("detaylı açıklama") || query.includes("openai") || query.includes("asistan")) {
-  getOpenAIResponse(query);
-  return;
+    const j = await r.json();
+    const content = j?.choices?.[0]?.message?.content;
+    return content || null;
+  }catch(e){ console.warn('openai err', e); return null; }
 }
 
-
-  const sohbetYanıtları = {
-    "nasılsın": "Çok iyiyim, sizin için buradayım.",
-    "iyi misin": "Harikayım, size yardımcı olmak için hazırım.",
-    "burada mısın": "Evet, buradayım ve sizi dinliyorum.",
-    "teşekkürler": "Rica ederim, her zaman buradayım.",
-    "merhaba": "Merhaba, nasıl yardımcı olabilirim?",
-    "hoşça kal": "Görüşmek üzere, iyi çalışmalar."
-  };
-
-  for (let anahtar in sohbetYanıtları) {
-    if (query.includes(anahtar)) {
-      const mesaj = sohbetYanıtları[anahtar];
-      document.getElementById("response").innerText += "\nYanıt: " + mesaj;
-      speak(mesaj);
-      return;
-    }
-  }
-
-  const olasiSorgular = [
-    "Pul biber için toplam üretim ne kadar",
-    "10 Ekim'de ne üretildi",
-    "Paketlemede kaç kişi çalıştı",
-    "Tarihe göre üretim grafiği göster",
-    "Lokum için kullanılan toplam hammadde miktarı nedir",
-    "En çok üretim yapan firma hangisi",
-    "Ürünlere göre ortalama üretim miktarı nedir"
-  ];
-
-  let enYakin = olasiSorgular.find(s => query.split(" ").some(kelime => s.toLowerCase().includes(kelime)));
-  if (!enYakin) {
-    const mesaj = "Sorunuzu anlayamadım. Lütfen tekrar eder misiniz?";
-    document.getElementById("response").innerText += "\nYanıt: " + mesaj;
-    speak(mesaj);
+/* ===== main question processing ===== */
+async function processQuestion(q){
+  showResp('İşleniyor...');
+  const local = localAnswer(q);
+  if(local){
+    showResp(local);
+    speak(local);
     return;
   }
+  // fallback to OpenAI if possible
+  const ai = await askOpenAI(q);
+  if(ai){
+    showResp(ai);
+    speak(ai);
+    return;
+  }
+  const fb = "Bu soruyu yerel veriyle yanıtlayamadım. Günlük/hammadde-düzeyinde veri sağlarsanız daha ayrıntılı cevap veririm.";
+  showResp(fb);
+  speak(fb);
+}
 
-  if (!query.includes("üretim") && !query.includes("grafik") && !query.includes("hammadde") && !query.includes("çalışan")) {
-    const mesaj = `Bunu mu demek istediniz: "${enYakin}"? Evet mi, hayır mı?`;
-    document.getElementById("response").innerText += "\nYanıt: " + mesaj;
-    speak(mesaj);
-
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = "tr-TR";
-    recognition.interimResults = false;
-    recognition.continuous = false;
+/* ===== events ===== */
+micBtn.addEventListener('click', async ()=>{
+  if(!setupRecognition()) return;
+  const stream = await ensureMic();
+  if(!stream) return;
+  try{
     recognition.start();
-
-    recognition.onresult = function (event) {
-      const cevap = event.results[0][0].transcript.toLowerCase();
-      if (cevap.includes("evet")) {
-        processQuery(enYakin.toLowerCase());
-      } else {
-        speak("Lütfen sorunuzu tekrar edin.");
-      }
-    };
-    return;
+  }catch(e){
+    console.warn('start err', e); transcript.innerText = 'Dinleme başlatılamadı.'; 
   }
+});
 
-  let filtered = [...excelData];
-  const firma = query.includes("sekerci") ? "SEKERCI" :
-                query.includes("paketleme") ? "PAKETLEME" : null;
-  const urun = query.includes("pul") && query.includes("biber") ? "PUL BIBER" :
-               query.includes("lokum") ? "LOKUM" : null;
-  const tarihMatch = query.match(/\d{1,2}\s?[a-zçğıöşü]{3,9}/i);
-  const tarih = tarihMatch ? tarihMatch[0].toUpperCase() : null;
-
-  if (firma) filtered = filtered.filter(r => r["FIRMA"] === firma);
-  if (urun) filtered = filtered.filter(r => r["URUN"] === urun);
-  if (tarih) filtered = filtered.filter(r => r["TARIH"].toUpperCase().includes(tarih));
-
-  let toplamUretim = 0, toplamHammadde = 0, toplamCalisan = 0;
-  filtered.forEach(row => {
-    toplamUretim += row["URETIM"] || 0;
-    toplamHammadde += row["HAMMADDE_MIKTARI"] || 0;
-    toplamCalisan += row["CALISAN"] || 0;
-  });
-
-  let mesaj = "";
-  if (query.includes("grafik")) {
-    drawChart(filtered);
-    mesaj = "Grafik gösteriliyor.";
-  } else if (query.includes("çalışan")) {
-    mesaj = `Toplam çalışan sayısı: ${toplamCalisan}`;
-  } else if (query.includes("ortalama")) {
-    const ort = (toplamUretim / filtered.length).toFixed(2);
-    mesaj = `Ortalama üretim miktarı: ${ort} birim`;
-  } else if (query.includes("hammadde")) {
-    mesaj = `Toplam kullanılan hammadde miktarı: ${toplamHammadde} kg`;
-  } else {
-    mesaj = `Toplam üretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Çalışan sayısı: ${toplamCalisan}`;
-  }
-
-  document.getElementById("response").innerText += "\nYanıt: " + mesaj;
-  speak(mesaj);
-}
-
-function drawChart(data) {
-  const ctx = document.getElementById("chart").getContext("2d");
-  if (window.barChart) window.barChart.destroy();
-
-  const grouped = {};
-  data.forEach(row => {
-    if (!grouped[row.TARIH]) grouped[row.TARIH] = 0;
-    grouped[row.TARIH] += row.URETIM;
-  });
-
-  const labels = Object.keys(grouped);
-  const values = Object.values(grouped);
-
-  window.barChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "Üretim Miktarı",
-        data: values,
-        backgroundColor: "#00bcd4"
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
-  });
-}
+/* ===== greet on load (may be blocked until user gesture on some browsers) ===== */
+window.addEventListener('load', ()=>{
+  // warm voices
+  speechSynthesis.getVoices();
+  try{ speak('Merhaba ben SANITA Paketleme bilgi robotuyum. Bana dilediginizi sorabilirsiniz.'); }catch(e){ console.warn('greet', e); }
+});
 </script>
 </body>
 </html>
-const OPENAI_API_KEY = "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"; // Buraya kendi OpenAI anahtarını ekle
-
-async function getOpenAIResponse(prompt) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7
-    })
-  });
-
-  const data = await response.json();
-  const reply = data.choices?.[0]?.message?.content || "Yanıt alınamadı.";
-  document.getElementById("response").innerText += "\nYanıt: " + reply;
-  speak(reply);
-}
