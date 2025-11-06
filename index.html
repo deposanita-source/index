@@ -42,6 +42,7 @@
       margin-top: 2em; font-size: 1.2em;
       text-align: center; max-width: 90%;
       animation: fadeIn 2s ease-in-out;
+      white-space: pre-line;
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -100,11 +101,6 @@
     };
 
     document.getElementById("mic-button").onclick = () => {
-      if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-        alert("Tarayıcınız sesli komut desteklemiyor.");
-        return;
-      }
-
       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = "tr-TR";
       recognition.interimResults = false;
@@ -134,7 +130,7 @@
       });
 
       recognition.onresult = function (event) {
-        const query = event.results[0][0].transcript.toLowerCase();
+        const query = event.results[0][0].transcript.toLowerCase().trim();
         document.getElementById("response").innerText = "Soru: " + query;
         processQuery(query);
       };
@@ -149,13 +145,71 @@
         document.getElementById("wave").style.transform = "scale(1)";
       };
     };
-
     function processQuery(query) {
-      let filtered = [...excelData];
+      query = query.replace("sanita", "").trim();
 
+      const sohbetYanıtları = {
+        "nasılsın": "Çok iyiyim, sizin için buradayım.",
+        "iyi misin": "Harikayım, size yardımcı olmak için hazırım.",
+        "burada mısın": "Evet, buradayım ve sizi dinliyorum.",
+        "teşekkürler": "Rica ederim, her zaman buradayım.",
+        "merhaba": "Merhaba, nasıl yardımcı olabilirim?",
+        "hoşça kal": "Görüşmek üzere, iyi çalışmalar."
+      };
+
+      for (let anahtar in sohbetYanıtları) {
+        if (query.includes(anahtar)) {
+          const mesaj = sohbetYanıtları[anahtar];
+          document.getElementById("response").innerText += "\nYanıt: " + mesaj;
+          speak(mesaj);
+          return;
+        }
+      }
+
+      const olasiSorgular = [
+        "Pul biber için toplam üretim ne kadar",
+        "10 Ekim'de ne üretildi",
+        "Paketlemede kaç kişi çalıştı",
+        "Tarihe göre üretim grafiği göster",
+        "Lokum için kullanılan toplam hammadde miktarı nedir",
+        "En çok üretim yapan firma hangisi",
+        "Ürünlere göre ortalama üretim miktarı nedir"
+      ];
+
+      let enYakin = olasiSorgular.find(s => query.split(" ").some(kelime => s.toLowerCase().includes(kelime)));
+      if (!enYakin) {
+        const mesaj = "Sorunuzu anlayamadım. Lütfen tekrar eder misiniz?";
+        document.getElementById("response").innerText += "\nYanıt: " + mesaj;
+        speak(mesaj);
+        return;
+      }
+
+      if (!query.includes("üretim") && !query.includes("grafik") && !query.includes("hammadde") && !query.includes("çalışan")) {
+        const mesaj = `Bunu mu demek istediniz: "${enYakin}"? Evet mi, hayır mı?`;
+        document.getElementById("response").innerText += "\nYanıt: " + mesaj;
+        speak(mesaj);
+
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = "tr-TR";
+        recognition.interimResults = false;
+        recognition.continuous = false;
+        recognition.start();
+
+        recognition.onresult = function (event) {
+          const cevap = event.results[0][0].transcript.toLowerCase();
+          if (cevap.includes("evet")) {
+            processQuery(enYakin.toLowerCase());
+          } else {
+            speak("Lütfen sorunuzu tekrar edin.");
+          }
+        };
+        return;
+      }
+
+      let filtered = [...excelData];
       const firma = query.includes("sekerci") ? "SEKERCI" :
                     query.includes("paketleme") ? "PAKETLEME" : null;
-      const urun = query.includes("pul biber") ? "PUL BIBER" :
+      const urun = query.includes("pul") && query.includes("biber") ? "PUL BIBER" :
                    query.includes("lokum") ? "LOKUM" : null;
       const tarihMatch = query.match(/\d{1,2}\s?[a-zçğıöşü]{3,9}/i);
       const tarih = tarihMatch ? tarihMatch[0].toUpperCase() : null;
@@ -165,23 +219,19 @@
       if (tarih) filtered = filtered.filter(r => r["TARIH"].toUpperCase().includes(tarih));
 
       let toplamUretim = 0, toplamHammadde = 0, toplamCalisan = 0;
-      const tarihSet = new Set();
-
       filtered.forEach(row => {
         toplamUretim += row["URETIM"] || 0;
         toplamHammadde += row["HAMMADDE_MIKTARI"] || 0;
         toplamCalisan += row["CALISAN"] || 0;
-        tarihSet.add(row["TARIH"]);
       });
 
       let mesaj = "";
-
       if (query.includes("grafik")) {
         drawChart(filtered);
         mesaj = "Grafik gösteriliyor.";
-      } else if (query.includes("kisi") || query.includes("çalışan")) {
+      } else if (query.includes("çalışan")) {
         mesaj = `Toplam çalışan sayısı: ${toplamCalisan}`;
-      } else if (query.includes("üretim") && query.includes("ortalama")) {
+      } else if (query.includes("ortalama")) {
         const ort = (toplamUretim / filtered.length).toFixed(2);
         mesaj = `Ortalama üretim miktarı: ${ort} birim`;
       } else if (query.includes("hammadde")) {
