@@ -69,7 +69,7 @@ const veri = {
     "KÖRİ":1670.06,"LİMON TUZU":9441.80,"KARABİBER":3020.10,"TOZ BİBER":14818.43,
     "NİŞASTA BUĞDAY":100,"MAHLEP":38.8,"KARBONAT":342,"ÇÖREKOTU":30,"GALETA UNU":8770.10,
     "KUŞ ÜZÜMÜ":1620,"BEYAZ HAŞHAŞ":10,"SARIMSAK":971.8,"NİŞASTA MISIR":500,
-    "ZERDEÇAL":743,"PİZZA SPİCE MİX":25.2,"KEBAP SPİCE MİX":19.2,"NANE":3869.95,
+    "ZERDEÇAL":743,"PİZZA SPİCE MİX":25.2,"KEBAP SPICE MİX":19.2,"NANE":3869.95,
     "MAYDANOZ":496.8,"CHİCKEN SEASONING MİX":19.2,"SPİCE MİX":19.2,"BAHARAT KARIŞIMI":26.88,
     "FESLEĞEN":534.9,"SUSAM":2721.9,"ZENCEFİL":196.1,"KİŞNİŞ":55.68,"DEREOTU":26.06,
     "SOĞAN":20,"BAMYA KURUSU":5,"YER FISTIĞI":60.1,"SHAWARMA ÇEŞNİSİ":13.5,
@@ -98,6 +98,14 @@ if("webkitSpeechRecognition" in window){
  };
 }
 
+// --- SAYI YUVARLAMA ---
+function yuvarlaMetin(metin){
+  return metin.replace(/\d+\.\d+/g, (sayi)=>{
+    const tam = Math.round(parseFloat(sayi));
+    return tam.toLocaleString("tr-TR");
+  });
+}
+
 // --- SORU-CEVAP ---
 function yanitla(soru){
   let cevap="";
@@ -113,7 +121,14 @@ function yanitla(soru){
   // firma bazlı
   else if(soru.includes("mesa")) cevap=`Mesa firması ${veri.firmalar["MESA"].uretim} adet üretim yaptı, ${veri.firmalar["MESA"].hammadde} kg hammadde kullandı.`;
   else if(soru.includes("sofra")) cevap=`Sofra firması ${veri.firmalar["SOFRA"].uretim} adet üretim yaptı, ${veri.firmalar["SOFRA"].hammadde} kg hammadde kullandı.`;
-  else if(soru.includes("evergreen")) cevap=`Evergreen ${veri.firmalar["EVERGREEN"].uretim} adet üretim yaptı, ${veri.firmalar["EVERGREEN"].hammadde} kg hammadde kullandı.`;
+  else if(soru.includes("evergreen")) cevap=`Evergreen firması ${veri.firmalar["EVERGREEN"].uretim} adet üretim yaptı, ${veri.firmalar["EVERGREEN"].hammadde} kg hammadde kullandı.`;
+  else if(soru.includes("kervan")) cevap=`Kervan firması ${veri.firmalar["KERVAN"].uretim} adet üretim yaptı, ${veri.firmalar["KERVAN"].hammadde} kg hammadde kullandı.`;
+  else if(soru.includes("recep can")) cevap=`Recep Can firması ${veri.firmalar["RECEP CAN"].uretim} adet üretim yaptı, ${veri.firmalar["RECEP CAN"].hammadde} kg hammadde kullandı.`;
+  else if(soru.includes("cash")) cevap=`Cash&Carry firması ${veri.firmalar["CASH&CARRY"].uretim} adet üretim yaptı, ${veri.firmalar["CASH&CARRY"].hammadde} kg hammadde kullandı.`;
+  // özel tarihsel analiz
+  else if(soru.includes("01 ekim 2025") || soru.includes("1 ekim 2025")){
+    cevap = "01 Ekim 2025 tarihinde toplam 6 firma üretim yaptı. 8 farklı ürün üretildi ve toplam 3089 adet ürün üretildi. Kullanılan toplam hammadde miktarı 5412 kilogramdır. En çok kullanılan hammadde Pul biber olmuştur.";
+  }
   // hammadde sorgusu
   else{
     const key=Object.keys(veri.hammaddeler).find(k=>soru.includes(k.toLowerCase()));
@@ -122,14 +137,18 @@ function yanitla(soru){
   // özel sorgular
   if(soru.includes("en çok")){
     const max=Object.entries(veri.hammaddeler).reduce((a,b)=>a[1]>b[1]?a:b);
-    cevap=`En çok kullanılan hammadde ${max[0]} olup ${max[1]} kg kullanılmıştır.`;
+    cevap=`En çok kullanılan hammadde ${max[0]} olup ${Math.round(max[1])} kg kullanılmıştır.`;
   }
   if(soru.includes("en az")){
     const min=Object.entries(veri.hammaddeler).reduce((a,b)=>a[1]<b[1]?a:b);
-    cevap=`En az kullanılan hammadde ${min[0]} olup sadece ${min[1]} kg kullanılmıştır.`;
+    cevap=`En az kullanılan hammadde ${min[0]} olup sadece ${Math.round(min[1])} kg kullanılmıştır.`;
   }
-  if(soru.includes("kaç çeşit")||soru.includes("kaç tane hammadde")))
+  if(soru.includes("kaç çeşit")||soru.includes("kaç tane hammadde"))
     cevap=`Toplam ${Object.keys(veri.hammaddeler).length} farklı hammadde kullanılmıştır.`;
+  if(soru.includes("kaç firma"))
+    cevap = "Toplam 6 firma üretim yaptı.";
+  if(soru.includes("kaç ürün"))
+    cevap = "Toplam 8 farklı ürün üretildi.";
 
   if(!cevap) cevap="Bunu anlayamadım, örneğin ‘Pul biber ne kadar kullanıldı?’ diyebilirsin.";
 
@@ -140,7 +159,7 @@ function yanitla(soru){
 // --- SESLİ CEVAP (ERKEK SES) ---
 function sesliCevap(metin){
  const synth=window.speechSynthesis;
- const utter=new SpeechSynthesisUtterance(metin);
+ const utter=new SpeechSynthesisUtterance(yuvarlaMetin(metin));
  utter.lang="tr-TR"; utter.pitch=0.9; utter.rate=1.0;
  const male=synth.getVoices().find(v=>v.lang.startsWith("tr")&&v.name.toLowerCase().includes("male"))||synth.getVoices()[0];
  utter.voice=male; synth.speak(utter);
