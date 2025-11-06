@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Sanita Sesli Veri Asistani</title>
+  <title>Sanita Sesli Veri Asistanı</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     html, body {
@@ -35,13 +35,8 @@
       height: 60px;
       border-radius: 50%;
       background: radial-gradient(circle, #00bcd4 40%, transparent 70%);
-      animation: pulseWave 1.5s infinite;
+      transition: transform 0.1s ease-out;
       display: none;
-    }
-    @keyframes pulseWave {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.5); opacity: 0.6; }
-      100% { transform: scale(1); opacity: 1; }
     }
     #response {
       margin-top: 2em; font-size: 1.2em;
@@ -80,34 +75,18 @@
   </style>
 </head>
 <body>
-  <header>🎙️ Sanita Sesli Veri Asistani</header>
+  <header>🎙️ Sanita Sesli Veri Asistanı</header>
   <button id="mic-button">🎤 Soru Sor</button>
   <div id="wave"></div>
   <div id="response"></div>
   <div id="chart-container"><canvas id="chart"></canvas></div>
-
-  <footer>
-    <h3>📌 Ornek Sesli Sorular</h3>
-    <ul>
-      <li>🔍 "Pul biber icin toplam uretim ne kadar"</li>
-      <li>📅 "10 Ekim'de ne uretildi"</li>
-      <li>👥 "Paketlemede kac kisi calisti"</li>
-      <li>📊 "Tarihe gore uretim grafigi goster"</li>
-      <li>⚖️ "Kisi basina ortalama uretim miktari nedir"</li>
-      <li>📦 "Lokum icin kullanilan toplam hammadde miktari nedir"</li>
-      <li>🏆 "En cok uretim yapan firma hangisi"</li>
-      <li>📈 "Urunlere gore ortalama uretim miktari nedir"</li>
-    </ul>
-    <p>Bu sorulari sesli olarak sorabilirsiniz. Sistem otomatik olarak yanit verir ve gerekirse grafik cizer.</p>
-  </footer>
-
   <script>
     const excelData = [
-      {"FIRMA":"SEKERCI","URUN":"PUL BIBER","URETIM":1200,"HAMMADDE":"KIRMIZI BIBER","HAMMADDE_MIKTARI":300,"TARIH":"10 Ekim","CALISAN":5},
-      {"FIRMA":"SEKERCI","URUN":"PUL BIBER","URETIM":800,"HAMMADDE":"TUZ","HAMMADDE_MIKTARI":50,"TARIH":"10 Ekim","CALISAN":5},
-      {"FIRMA":"SEKERCI","URUN":"LOKUM","URETIM":500,"HAMMADDE":"NISASTA","HAMMADDE_MIKTARI":200,"TARIH":"11 Ekim","CALISAN":4},
-      {"FIRMA":"PAKETLEME","URUN":"PUL BIBER","URETIM":1000,"HAMMADDE":"KIRMIZI BIBER","HAMMADDE_MIKTARI":250,"TARIH":"10 Ekim","CALISAN":3},
-      {"FIRMA":"PAKETLEME","URUN":"LOKUM","URETIM":600,"HAMMADDE":"NISASTA","HAMMADDE_MIKTARI":180,"TARIH":"11 Ekim","CALISAN":3}
+      {FIRMA:"SEKERCI", URUN:"PUL BIBER", URETIM:1200, HAMMADDE:"KIRMIZI BIBER", HAMMADDE_MIKTARI:300, TARIH:"10 Ekim", CALISAN:5},
+      {FIRMA:"SEKERCI", URUN:"PUL BIBER", URETIM:800, HAMMADDE:"TUZ", HAMMADDE_MIKTARI:50, TARIH:"10 Ekim", CALISAN:5},
+      {FIRMA:"SEKERCI", URUN:"LOKUM", URETIM:500, HAMMADDE:"NISASTA", HAMMADDE_MIKTARI:200, TARIH:"11 Ekim", CALISAN:4},
+      {FIRMA:"PAKETLEME", URUN:"PUL BIBER", URETIM:1000, HAMMADDE:"KIRMIZI BIBER", HAMMADDE_MIKTARI:250, TARIH:"10 Ekim", CALISAN:3},
+      {FIRMA:"PAKETLEME", URUN:"LOKUM", URETIM:600, HAMMADDE:"NISASTA", HAMMADDE_MIKTARI:180, TARIH:"11 Ekim", CALISAN:3}
     ];
 
     function speak(text) {
@@ -117,12 +96,12 @@
     }
 
     window.onload = () => {
-      speak("Merhaba hosgeldiniz, ben Sanita Paketleme Bolumu Yapay Zeka Asistaniyim. Nasil yardimci olabilirim");
+      speak("Merhaba, ben Sanita'nın sesli veri asistanıyım. Size nasıl yardımcı olabilirim?");
     };
 
     document.getElementById("mic-button").onclick = () => {
       if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-        alert("Tarayiciniz sesli komut desteklemiyor.");
+        alert("Tarayıcınız sesli komut desteklemiyor.");
         return;
       }
 
@@ -132,8 +111,27 @@
       recognition.continuous = false;
 
       recognition.start();
-      document.getElementById("wave").style.display = "block";
-      speak("Dinliyorum, lutfen sorunuzu sorun.");
+      speak("Dinliyorum, lütfen sorunuzu sorun.");
+
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        const audioContext = new AudioContext();
+        const source = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        source.connect(analyser);
+
+        function animateWave() {
+          analyser.getByteFrequencyData(dataArray);
+          const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
+          const scale = Math.min(2, Math.max(1, volume / 30));
+          document.getElementById("wave").style.transform = `scale(${scale})`;
+          requestAnimationFrame(animateWave);
+        }
+
+        document.getElementById("wave").style.display = "block";
+        animateWave();
+      });
 
       recognition.onresult = function (event) {
         const query = event.results[0][0].transcript.toLowerCase();
@@ -141,13 +139,14 @@
         processQuery(query);
       };
 
-      recognition.onerror = function (event) {
-        alert("Mikrofon hatasi: " + event.error);
+      recognition.onerror = function () {
         document.getElementById("wave").style.display = "none";
+        document.getElementById("wave").style.transform = "scale(1)";
       };
 
       recognition.onend = function () {
         document.getElementById("wave").style.display = "none";
+        document.getElementById("wave").style.transform = "scale(1)";
       };
     };
 
@@ -158,7 +157,11 @@
                     query.includes("paketleme") ? "PAKETLEME" : null;
       const urun = query.includes("pul biber") ? "PUL BIBER" :
                    query.includes("lokum") ? "LOKUM" : null;
-      const tarihMatch = query.match(/\d{1,
+      const tarihMatch = query.match(/\d{1,2}\s?[a-zçğıöşü]{3,9}/i);
+      const tarih = tarihMatch ? tarihMatch[0].toUpperCase() : null;
+
+      if (firma) filtered = filtered.filter(r => r["FIRMA"] === firma);
+      if (urun) filtered = filtered.filter(r => r["URUN"] === urun);
       if (tarih) filtered = filtered.filter(r => r["TARIH"].toUpperCase().includes(tarih));
 
       let toplamUretim = 0, toplamHammadde = 0, toplamCalisan = 0;
@@ -175,16 +178,16 @@
 
       if (query.includes("grafik")) {
         drawChart(filtered);
-        mesaj = "Grafik gosteriliyor.";
-      } else if (query.includes("kisi") || query.includes("calisan")) {
-        mesaj = `Toplam calisan sayisi: ${toplamCalisan}`;
-      } else if (query.includes("uretim") && query.includes("ortalama")) {
+        mesaj = "Grafik gösteriliyor.";
+      } else if (query.includes("kisi") || query.includes("çalışan")) {
+        mesaj = `Toplam çalışan sayısı: ${toplamCalisan}`;
+      } else if (query.includes("üretim") && query.includes("ortalama")) {
         const ort = (toplamUretim / filtered.length).toFixed(2);
-        mesaj = `Ortalama uretim miktari: ${ort} birim`;
+        mesaj = `Ortalama üretim miktarı: ${ort} birim`;
       } else if (query.includes("hammadde")) {
-        mesaj = `Toplam kullanilan hammadde miktari: ${toplamHammadde} kg`;
+        mesaj = `Toplam kullanılan hammadde miktarı: ${toplamHammadde} kg`;
       } else {
-        mesaj = `Toplam uretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Calisan sayisi: ${toplamCalisan}`;
+        mesaj = `Toplam üretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Çalışan sayısı: ${toplamCalisan}`;
       }
 
       document.getElementById("response").innerText += "\nYanıt: " + mesaj;
@@ -193,8 +196,9 @@
 
     function drawChart(data) {
       const ctx = document.getElementById("chart").getContext("2d");
-      const grouped = {};
+      if (window.barChart) window.barChart.destroy();
 
+      const grouped = {};
       data.forEach(row => {
         if (!grouped[row.TARIH]) grouped[row.TARIH] = 0;
         grouped[row.TARIH] += row.URETIM;
@@ -203,12 +207,12 @@
       const labels = Object.keys(grouped);
       const values = Object.values(grouped);
 
-      new Chart(ctx, {
+      window.barChart = new Chart(ctx, {
         type: "bar",
         data: {
           labels: labels,
           datasets: [{
-            label: "Uretim Miktari",
+            label: "Üretim Miktarı",
             data: values,
             backgroundColor: "#00bcd4"
           }]
@@ -224,4 +228,3 @@
   </script>
 </body>
 </html>
-
