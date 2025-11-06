@@ -1,1 +1,163 @@
-function processCommand(command) { // Basit örnek: "bugün kaç paket A üretildi?" if (command.includes('kaç') && command.includes('paket')) { const paketMatch = command.match(/paket\s([a-z])/i); const tarihMatch = command.match(/bugün|dün|\d{4}-\d{2}-\d{2}/i); let tarih = null; if (tarihMatch) { if (tarihMatch[0] === 'bugün') { tarih = new Date().toISOString().slice(0,10); } else if (tarihMatch[0] === 'dün') { const d = new Date(); d.setDate(d.getDate() - 1); tarih = d.toISOString().slice(0,10); } else { tarih = tarihMatch[0]; } } if (paketMatch && tarih) { const paket = paketMatch[1].toUpperCase(); const toplam = productionData .filter(d => d.paket === paket && d.tarih === tarih) .reduce((sum, d) => sum + d.adet, 0); const response = ${tarih} tarihinde paket ${paket} için toplam üretim ${toplam} adettir.; output.textContent = response; speak(response); } else { const response = 'Üzgünüm, sorunu tam anlayamadım. Lütfen tekrar deneyin.'; output.textContent = response; speak(response); } } else { const response = 'Komut tanınmadı. Lütfen "kaç paket A üretildi" gibi bir soru sorunuz.'; output.textContent = response; speak(response); } } </script> </body> </html>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanita Paketleme Bilgi Asistanı</title>
+<style>
+body {
+  margin: 0;
+  background: radial-gradient(circle at 50% 30%, #202533, #0d1117);
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  text-align: center;
+  overflow-x: hidden;
+}
+h1 {
+  font-size: 1.5rem;
+  margin-top: 30px;
+  color: #66b2ff;
+}
+#asistan {
+  margin-top: 50px;
+}
+#wave {
+  width: 80px;
+  height: 80px;
+  margin: 30px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3aaef2, #0057a3);
+  box-shadow: 0 0 25px #1da1f2;
+  animation: pulse 2s infinite ease-in-out;
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+#transcript, #response {
+  width: 80%;
+  margin: 10px auto;
+  background: rgba(255,255,255,0.05);
+  padding: 15px;
+  border-radius: 12px;
+  font-size: 1rem;
+  min-height: 30px;
+  text-align: left;
+}
+#examples {
+  margin-top: 20px;
+  opacity: 0.9;
+}
+button {
+  background: #0078d7;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin: 10px;
+}
+button:hover {
+  background: #005ea6;
+}
+</style>
+</head>
+<body>
+<h1>🔹 Sanita Paketleme Bilgi Asistanı</h1>
+<div id="asistan">
+  <div id="wave"></div>
+  <div id="transcript">🎤 Konuşun, sizi dinliyorum...</div>
+  <div id="response"></div>
+</div>
+
+<button id="micButton">🎙️ Dinlemeyi Başlat</button>
+
+<div id="examples">
+  <p>🧂 “Pul biber ay toplamı ne kadar?”</p>
+  <p>🏭 “Bim üretimi kaç kilo?”</p>
+  <p>📅 “1 Ekim’de ne kadar üretim yapıldı?”</p>
+  <p>👋 “Merhaba”</p>
+  <p>🙂 “Nasılsın?”</p>
+</div>
+
+<script>
+// --- Veri tabanı (örnek olarak gömülü üretim ve hammadde verileri) ---
+const veriler = {
+  "Pul biber": 20107.24,
+  "Kimyon": 4475.46,
+  "Toz biber": 14818.43,
+  "Limon tuzu": 9441.80,
+  "Galeta unu": 8770.10,
+  "Nane": 3869.95,
+  "Kekik": 2552.74,
+  "Tarçın": 2763.43,
+  "Zencefil": 196.10,
+  "Himalaya tuzu": 1033.20,
+  "Çam fıstığı": 160.00,
+  "Sumak": 1666.49,
+  "Karabiber": 3020.10,
+  "Mix marination": 120.00
+};
+
+// --- Sesli tanıma ---
+const micButton = document.getElementById('micButton');
+const transcriptDiv = document.getElementById('transcript');
+const responseDiv = document.getElementById('response');
+let recognizing = false;
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.lang = 'tr-TR';
+recognition.continuous = false;
+recognition.interimResults = false;
+
+micButton.addEventListener('click', () => {
+  if (!recognizing) {
+    recognition.start();
+    transcriptDiv.innerText = "🎙️ Dinleniyor...";
+    micButton.innerText = "⏹️ Durdur";
+  } else {
+    recognition.stop();
+    transcriptDiv.innerText = "🎤 Konuşun, sizi dinliyorum...";
+    micButton.innerText = "🎙️ Dinlemeyi Başlat";
+  }
+  recognizing = !recognizing;
+});
+
+recognition.onresult = (event) => {
+  const text = event.results[0][0].transcript.toLowerCase();
+  transcriptDiv.innerText = "🗣️ " + text;
+  yanitVer(text);
+};
+
+// --- Ana mantık ---
+function yanitVer(soru) {
+  let cevap = "";
+
+  if (soru.includes("merhaba")) cevap = "Merhaba! Nasılsınız?";
+  else if (soru.includes("nasılsın")) cevap = "Gayet iyiyim, siz nasılsınız?";
+  else if (soru.includes("pul biber")) cevap = `Pul biber ay toplamı ${veriler["Pul biber"]} kilogramdır.`;
+  else if (soru.includes("kimyon")) cevap = `Kimyon toplam ${veriler["Kimyon"]} kilogram kullanılmış.`;
+  else if (soru.includes("toz biber")) cevap = `Toz biber miktarı ${veriler["Toz biber"]} kilogram.`;
+  else if (soru.includes("bim")) cevap = "BİM için toplam üretim miktarı 25.200 kilogram civarında.";
+  else if (soru.includes("üretim")) cevap = "Genel üretim miktarları Ekim ayında ortalama 100 ton civarındaydı.";
+  else cevap = "Tam anlayamadım, örneğin 'Pul biber ne kadar kullanıldı?' diyebilirsiniz.";
+
+  responseDiv.innerText = "🤖 " + cevap;
+  sesliOku(cevap);
+}
+
+// --- Sesli cevap ---
+function sesliOku(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "tr-TR";
+  utter.pitch = 1;
+  utter.rate = 1;
+  utter.voice = speechSynthesis.getVoices().find(v => v.lang === "tr-TR" && v.name.includes("Male")) || null;
+  speechSynthesis.speak(utter);
+}
+</script>
+</body>
+</html>
