@@ -159,3 +159,69 @@
       const urun = query.includes("pul biber") ? "PUL BIBER" :
                    query.includes("lokum") ? "LOKUM" : null;
       const tarihMatch = query.match(/\d{1,
+      if (tarih) filtered = filtered.filter(r => r["TARIH"].toUpperCase().includes(tarih));
+
+      let toplamUretim = 0, toplamHammadde = 0, toplamCalisan = 0;
+      const tarihSet = new Set();
+
+      filtered.forEach(row => {
+        toplamUretim += row["URETIM"] || 0;
+        toplamHammadde += row["HAMMADDE_MIKTARI"] || 0;
+        toplamCalisan += row["CALISAN"] || 0;
+        tarihSet.add(row["TARIH"]);
+      });
+
+      let mesaj = "";
+
+      if (query.includes("grafik")) {
+        drawChart(filtered);
+        mesaj = "Grafik gosteriliyor.";
+      } else if (query.includes("kisi") || query.includes("calisan")) {
+        mesaj = `Toplam calisan sayisi: ${toplamCalisan}`;
+      } else if (query.includes("uretim") && query.includes("ortalama")) {
+        const ort = (toplamUretim / filtered.length).toFixed(2);
+        mesaj = `Ortalama uretim miktari: ${ort} birim`;
+      } else if (query.includes("hammadde")) {
+        mesaj = `Toplam kullanilan hammadde miktari: ${toplamHammadde} kg`;
+      } else {
+        mesaj = `Toplam uretim: ${toplamUretim} birim. Toplam hammadde: ${toplamHammadde} kg. Calisan sayisi: ${toplamCalisan}`;
+      }
+
+      document.getElementById("response").innerText += "\nYanıt: " + mesaj;
+      speak(mesaj);
+    }
+
+    function drawChart(data) {
+      const ctx = document.getElementById("chart").getContext("2d");
+      const grouped = {};
+
+      data.forEach(row => {
+        if (!grouped[row.TARIH]) grouped[row.TARIH] = 0;
+        grouped[row.TARIH] += row.URETIM;
+      });
+
+      const labels = Object.keys(grouped);
+      const values = Object.values(grouped);
+
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Uretim Miktari",
+            data: values,
+            backgroundColor: "#00bcd4"
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
+
