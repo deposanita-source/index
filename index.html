@@ -1,230 +1,163 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sesli Komutlarla JSON Tabanlı Üretim Sistemi</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanita Paketleme Bilgi Asistanı</title>
 <style>
-body { font-family: Arial, sans-serif; margin: 0; background: #f0f0f0; color: #333; }
-header { background: #005f73; color: white; padding: 1rem; text-align: center; }
-main { padding: 1rem; max-width: 900px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-#output { margin-top: 1rem; white-space: pre-line; }
-button { background: #0a9396; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
-button:hover { background: #007f7f; }
-#wave { margin-top: 1rem; height: 50px; }
-#wave div { display: inline-block; width: 4px; height: 10px; margin: 0 1px; background: #0a9396; border-radius: 2px; animation: wave 1.2s infinite ease-in-out; }
-#wave div:nth-child(odd) { animation-delay: 0s; }
-#wave div:nth-child(even) { animation-delay: 0.06s; }
-@keyframes wave {
-  0%, 100% { transform: scaleY(1); }
-  50% { transform: scaleY(2.5); }
+body {
+  margin: 0;
+  background: radial-gradient(circle at 50% 30%, #202533, #0d1117);
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  text-align: center;
+  overflow-x: hidden;
+}
+h1 {
+  font-size: 1.5rem;
+  margin-top: 30px;
+  color: #66b2ff;
+}
+#asistan {
+  margin-top: 50px;
+}
+#wave {
+  width: 80px;
+  height: 80px;
+  margin: 30px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, #3aaef2, #0057a3);
+  box-shadow: 0 0 25px #1da1f2;
+  animation: pulse 2s infinite ease-in-out;
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+#transcript, #response {
+  width: 80%;
+  margin: 10px auto;
+  background: rgba(255,255,255,0.05);
+  padding: 15px;
+  border-radius: 12px;
+  font-size: 1rem;
+  min-height: 30px;
+  text-align: left;
+}
+#examples {
+  margin-top: 20px;
+  opacity: 0.9;
+}
+button {
+  background: #0078d7;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin: 10px;
+}
+button:hover {
+  background: #005ea6;
 }
 </style>
 </head>
 <body>
-<header>
-<h1>Sesli Komutlarla JSON Tabanlı Üretim Sistemi</h1>
-</header>
-<main>
-<p>Bu sistem JSON verisi gömülü, sesli komutla çalışır, Türkçe yanıt verir ve grafik çizer.</p>
-<button id="startBtn">Sesli Komutu Başlat</button>
-<div id="wave"></div>
-<div id="output"></div>
-<canvas id="chartCanvas" style="max-width:100%; height:300px;"></canvas>
-</main>
+<h1>🔹 Sanita Paketleme Bilgi Asistanı</h1>
+<div id="asistan">
+  <div id="wave"></div>
+  <div id="transcript">🎤 Konuşun, sizi dinliyorum...</div>
+  <div id="response"></div>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<button id="micButton">🎙️ Dinlemeyi Başlat</button>
+
+<div id="examples">
+  <p>🧂 “Pul biber ay toplamı ne kadar?”</p>
+  <p>🏭 “Bim üretimi kaç kilo?”</p>
+  <p>📅 “1 Ekim’de ne kadar üretim yapıldı?”</p>
+  <p>👋 “Merhaba”</p>
+  <p>🙂 “Nasılsın?”</p>
+</div>
+
 <script>
-// JSON verisi gömülü
-let ROWS = [
-  { "URETIM_TARIH": "10/01/2025", "FIRMA": "SOFRA", "KULLANILAN HAMMADDE": "ÇAM FISTIĞI", "KULLANILAN HAMMADDE MIKTARI": 10, "MIKTAR": 10, "KISI SAYISI": 2 },
-  { "URETIM_TARIH": "10/01/2025", "FIRMA": "SOFRA", "KULLANILAN HAMMADDE": "YENİBAHAR", "KULLANILAN HAMMADDE MIKTARI": 10, "MIKTAR": 418, "KISI SAYISI": 12 },
-  { "URETIM_TARIH": "10/01/2025", "FIRMA": "KERVAN", "KULLANILAN HAMMADDE": "PULBİBER", "KULLANILAN HAMMADDE MIKTARI": 500, "MIKTAR": 951.75, "KISI SAYISI": 7 },
-  { "URETIM_TARIH": "10/01/2025", "FIRMA": "KERVAN", "KULLANILAN HAMMADDE": "TÜM BİBER", "KULLANILAN HAMMADDE MIKTARI": 264, "MIKTAR": 212571, "KISI SAYISI": 3 },
-  { "URETIM_TARIH": "10/01/2025", "FIRMA": "RECEP CAN", "KULLANILAN HAMMADDE": "DEFNE YAPRAĞI", "KULLANILAN HAMMADDE MIKTARI": 260, "MIKTAR": 99126.677, "KISI SAYISI": 3 }
-  // ... devamı buraya JSON formatında eklenebilir
-];
+// --- Veri tabanı (örnek olarak gömülü üretim ve hammadde verileri) ---
+const veriler = {
+  "Pul biber": 20107.24,
+  "Kimyon": 4475.46,
+  "Toz biber": 14818.43,
+  "Limon tuzu": 9441.80,
+  "Galeta unu": 8770.10,
+  "Nane": 3869.95,
+  "Kekik": 2552.74,
+  "Tarçın": 2763.43,
+  "Zencefil": 196.10,
+  "Himalaya tuzu": 1033.20,
+  "Çam fıstığı": 160.00,
+  "Sumak": 1666.49,
+  "Karabiber": 3020.10,
+  "Mix marination": 120.00
+};
 
-// Sesli komut ve yanıt için temel ayarlar
-const startBtn = document.getElementById('startBtn');
-const outputDiv = document.getElementById('output');
-const waveDiv = document.getElementById('wave');
-const chartCanvas = document.getElementById('chartCanvas');
-let chartInstance = null;
+// --- Sesli tanıma ---
+const micButton = document.getElementById('micButton');
+const transcriptDiv = document.getElementById('transcript');
+const responseDiv = document.getElementById('response');
+let recognizing = false;
 
-// Siri benzeri dalga animasyonu
-function createWaveAnimation() {
-  waveDiv.innerHTML = '';
-  const waveCount = 20;
-  for (let i = 0; i < waveCount; i++) {
-    const bar = document.createElement('div');
-    bar.style.animationDelay = `${i * 0.06}s`;
-    waveDiv.appendChild(bar);
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.lang = 'tr-TR';
+recognition.continuous = false;
+recognition.interimResults = false;
+
+micButton.addEventListener('click', () => {
+  if (!recognizing) {
+    recognition.start();
+    transcriptDiv.innerText = "🎙️ Dinleniyor...";
+    micButton.innerText = "⏹️ Durdur";
+  } else {
+    recognition.stop();
+    transcriptDiv.innerText = "🎤 Konuşun, sizi dinliyorum...";
+    micButton.innerText = "🎙️ Dinlemeyi Başlat";
   }
-}
-
-// Türkçe sesli yanıt
-function speak(text) {
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'tr-TR';
-  speechSynthesis.speak(utterance);
-}
-
-// Basit doğal dil işleme ve sorgu yanıtı
-function localAnswer(query) {
-  query = query.toLowerCase();
-  let response = '';
-
-  // Tarihe göre üretim sorgusu
-  if (query.includes('tarih') || query.includes('ne üretildi') || query.match(/\d{2}\/\d{2}\/\d{4}/)) {
-    const dateMatch = query.match(/(\d{2}\/\d{2}\/\d{4})/);
-    if (dateMatch) {
-      const date = dateMatch[1];
-      const filtered = ROWS.filter(r => r['URETIM_TARIH'] === date);
-      if (filtered.length > 0) {
-        let total = 0;
-        filtered.forEach(r => total += r['MIKTAR']);
-        response = `${date} tarihinde toplam üretim miktarı: ${total}`;
-      } else {
-        response = `${date} tarihinde üretim bulunamadı.`;
-      }
-    } else {
-      response = 'Lütfen tarih formatında bir sorgu giriniz (gg/aa/yyyy).';
-    }
-  }
-  // Firma bazlı üretim sorgusu
-  else if (query.includes('firma') || query.includes('firma adı') || query.includes('firma bazlı')) {
-    const firmaMatch = query.match(/(sof?a|kervan|recep can)/i);
-    if (firmaMatch) {
-      const firma = firmaMatch[1].toUpperCase();
-      const filtered = ROWS.filter(r => r['FIRMA'].toUpperCase() === firma);
-      if (filtered.length > 0) {
-        let total = 0;
-        filtered.forEach(r => total += r['MIKTAR']);
-        response = `${firma} firmasının toplam üretim miktarı: ${total}`;
-      } else {
-        response = `${firma} firması için üretim bulunamadı.`;
-      }
-    } else {
-      response = 'Lütfen geçerli bir firma adı giriniz (SOFRA, KERVAN, RECEP CAN).';
-    }
-  }
-  // En çok kullanılan hammadde
-  else if (query.includes('en çok') && query.includes('hammadde')) {
-    const hammaddeTotals = {};
-    ROWS.forEach(r => {
-      const hammadde = r['KULLANILAN HAMMADDE'];
-      if (!hammaddeTotals[hammadde]) hammaddeTotals[hammadde] = 0;
-      hammaddeTotals[hammadde] += r['KULLANILAN HAMMADDE MIKTARI'];
-    });
-    let maxHammadde = null;
-    let maxAmount = 0;
-    for (const [key, val] of Object.entries(hammaddeTotals)) {
-      if (val > maxAmount) {
-        maxAmount = val;
-        maxHammadde = key;
-      }
-    }
-    response = `En çok kullanılan hammadde: ${maxHammadde} (${maxAmount} birim)`;
-  }
-  // Belirli hammadde miktarı sorgusu
-  else if (query.includes('pul biber') || query.includes('pül biber')) {
-    const filtered = ROWS.filter(r => r['KULLANILAN HAMMADDE'].toLowerCase().includes('pul biber'));
-    if (filtered.length > 0) {
-      let total = 0;
-      filtered.forEach(r => total += r['KULLANILAN HAMMADDE MIKTARI']);
-      response = `Pul biber miktarı: ${total}`;
-    } else {
-      response = 'Pul biber için veri bulunamadı.';
-    }
-  }
-  // Toplam hammadde miktarı
-  else if (query.includes('toplam') && query.includes('hammadde')) {
-    let total = 0;
-    ROWS.forEach(r => total += r['KULLANILAN HAMMADDE MIKTARI']);
-    response = `Toplam kullanılan hammadde miktarı: ${total}`;
-  }
-  else {
-    response = 'Üzgünüm, bu soruya yanıt veremiyorum. Lütfen farklı bir soru deneyin.';
-  }
-
-  return response;
-}
-
-// Grafik çizme fonksiyonu
-function drawChart() {
-  if (chartInstance) {
-    chartInstance.destroy();
-  }
-  // Örnek: Firma bazlı toplam üretim miktarı
-  const firmaTotals = {};
-  ROWS.forEach(r => {
-    const firma = r['FIRMA'];
-    if (!firmaTotals[firma]) firmaTotals[firma] = 0;
-    firmaTotals[firma] += r['MIKTAR'];
-  });
-  const labels = Object.keys(firmaTotals);
-  const data = Object.values(firmaTotals);
-
-  const ctx = chartCanvas.getContext('2d');
-  chartInstance = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: 'Firma Bazlı Üretim Miktarı',
-        data: data,
-        backgroundColor: 'rgba(10, 147, 150, 0.7)',
-        borderColor: 'rgba(10, 147, 150, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
-  });
-}
-
-// Sesli komut başlatma
-startBtn.addEventListener('click', () => {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-    outputDiv.textContent = 'Tarayıcınız sesli komutu desteklemiyor.';
-    return;
-  }
-
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'tr-TR';
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  createWaveAnimation();
-  outputDiv.textContent = 'Dinleniyor...';
-
-  recognition.start();
-
-  recognition.onresult = (event) => {
-    const speechResult = event.results[0][0].transcript;
-    outputDiv.textContent = `Soru: ${speechResult}`;
-    const answer = localAnswer(speechResult);
-    outputDiv.textContent += `\nCevap: ${answer}`;
-    speak(answer);
-    drawChart();
-  };
-
-  recognition.onerror = (event) => {
-    outputDiv.textContent = `Hata: ${event.error}`;
-  };
-
-  recognition.onend = () => {
-    waveDiv.innerHTML = '';
-  };
+  recognizing = !recognizing;
 });
+
+recognition.onresult = (event) => {
+  const text = event.results[0][0].transcript.toLowerCase();
+  transcriptDiv.innerText = "🗣️ " + text;
+  yanitVer(text);
+};
+
+// --- Ana mantık ---
+function yanitVer(soru) {
+  let cevap = "";
+
+  if (soru.includes("merhaba")) cevap = "Merhaba! Nasılsınız?";
+  else if (soru.includes("nasılsın")) cevap = "Gayet iyiyim, siz nasılsınız?";
+  else if (soru.includes("pul biber")) cevap = `Pul biber ay toplamı ${veriler["Pul biber"]} kilogramdır.`;
+  else if (soru.includes("kimyon")) cevap = `Kimyon toplam ${veriler["Kimyon"]} kilogram kullanılmış.`;
+  else if (soru.includes("toz biber")) cevap = `Toz biber miktarı ${veriler["Toz biber"]} kilogram.`;
+  else if (soru.includes("bim")) cevap = "BİM için toplam üretim miktarı 25.200 kilogram civarında.";
+  else if (soru.includes("üretim")) cevap = "Genel üretim miktarları Ekim ayında ortalama 100 ton civarındaydı.";
+  else cevap = "Tam anlayamadım, örneğin 'Pul biber ne kadar kullanıldı?' diyebilirsiniz.";
+
+  responseDiv.innerText = "🤖 " + cevap;
+  sesliOku(cevap);
+}
+
+// --- Sesli cevap ---
+function sesliOku(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "tr-TR";
+  utter.pitch = 1;
+  utter.rate = 1;
+  utter.voice = speechSynthesis.getVoices().find(v => v.lang === "tr-TR" && v.name.includes("Male")) || null;
+  speechSynthesis.speak(utter);
+}
 </script>
 </body>
 </html>
