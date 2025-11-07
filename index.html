@@ -1,357 +1,170 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sanita Sesli Analiz Robotu AI</title>
 <style>
-  :root{--bg1:#0d1b2a;--bg2:#1b263b;--accent:#00d9ff;--card:#0f2933}
-  *{box-sizing:border-box}
-  body{margin:0;font-family:"Segoe UI",sans-serif;background:radial-gradient(circle,var(--bg1),var(--bg2));color:#ecfeff;display:flex;align-items:center;justify-content:center;height:100vh;padding:18px}
-  .card{width:980px;max-width:98%;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:18px;box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.03)}
-  .header{display:flex;align-items:center;gap:12px}
-  .logo{width:48px;height:48px;border-radius:10px;background:linear-gradient(90deg,#2AE7B4,#1FBBA1);display:flex;align-items:center;justify-content:center;font-weight:800;color:#022018}
-  .title{font-weight:800;font-size:18px}
-  .main{display:flex;gap:14px;margin-top:14px;align-items:flex-start}
-  .left{width:320px;display:flex;flex-direction:column;align-items:center}
-  .micOuter{position:relative;width:300px;height:300px;border-radius:999px;display:flex;align-items:center;justify-content:center}
-  .ring{position:absolute;width:520px;height:520px;border-radius:999px;left:50%;transform:translateX(-50%) scale(.95);pointer-events:none;opacity:0}
-  .ring.on{opacity:1;animation:ringPulse 1.6s infinite}
-  @keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(0,217,255,0.12)}60%{box-shadow:0 0 0 36px rgba(0,217,255,0)}100%{box-shadow:0 0 0 0 rgba(0,217,255,0)}}
-  .micBtn{width:170px;height:170px;border-radius:999px;background:linear-gradient(90deg,var(--accent),#2fd9a2);border:none;color:#022018;font-size:56px;font-weight:900;cursor:pointer;box-shadow:0 22px 60px rgba(0,0,0,0.45)}
-  .wave{display:flex;gap:6px;margin-top:12px;opacity:0;transition:opacity .12s}
-  .bar{width:12px;background:linear-gradient(180deg,var(--accent),#34d399);border-radius:6px;height:14px;transition:height .06s}
-  .transcript{min-height:72px;text-align:center;color:#dff8f0;font-size:15px;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.01)}
-  .right{flex:1;display:flex;flex-direction:column;gap:12px}
-  .response{padding:12px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);min-height:220px;overflow:auto}
-  .userText{font-size:14px;color:#cdeee0;margin-bottom:8px}
-  .resText{font-size:15.5px;line-height:1.45;color:#e6fff4;white-space:pre-wrap}
-  .examples{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-  .example{background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:10px;font-size:13px;color:#9fc1b5;cursor:pointer}
-  .footer{font-size:13px;color:#9fc1b5;margin-top:8px;text-align:center}
-  @media(max-width:920px){ .main{flex-direction:column;align-items:center} .left{width:100%} .micBtn{width:140px;height:140px;font-size:40px} .card{padding:12px} }
+  body {
+    background: radial-gradient(circle, #0d1b2a, #1b263b);
+    color: white;
+    font-family: "Segoe UI", sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  h1 {
+    color: #00d9ff;
+    font-weight: 600;
+  }
+  #mic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #00b4d8, #0077b6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 30px auto;
+    cursor: pointer;
+    box-shadow: 0 0 20px #00d9ff;
+    transition: all 0.3s ease;
+  }
+  #mic:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 40px #00e0ff;
+  }
+  .wave {
+    width: 100%;
+    height: 6px;
+    background: #00d9ff;
+    margin: 10px auto;
+    border-radius: 5px;
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0% {opacity: 0.3;}
+    50% {opacity: 1;}
+    100% {opacity: 0.3;}
+  }
+  #output, #transcript {
+    margin-top: 20px;
+    font-size: 18px;
+  }
+  #examples {
+    margin-top: 25px;
+    font-size: 16px;
+    color: #90e0ef;
+  }
+  button {
+    background: #0077b6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  button:hover {
+    background: #00b4d8;
+  }
 </style>
 </head>
 <body>
-  <div class="card" role="main" aria-label="Sanita Asistan">
-    <div class="header">
-      <div class="logo">S</div>
-      <div>
-        <div class="title">SANITA SESLI ANALIZ ROBOTU AI</div>
-        <div style="color:#9fc1b5;font-size:13px">1-31 Ekim aralığı için günlük, firma ve hammadde analizleri</div>
-      </div>
-      <div style="margin-left:auto">
-        <button id="chartBtn" style="background:transparent;border:1px solid rgba(255,255,255,0.04);color:#9fc1b5;padding:8px 10px;border-radius:8px;cursor:pointer">Hammadde Grafiği</button>
-      </div>
-    </div>
+  <h1>?? Sanita Sesli Analiz Robotu AI</h1>
+  <div id="mic">??</div>
+  <div class="wave"></div>
+  <p id="transcript">Konuşmak için mikrofona dokun.</p>
+  <div id="output"></div>
 
-    <div class="main">
-      <div class="left">
-        <div class="micOuter">
-          <div id="ring" class="ring" aria-hidden="true"></div>
-          <button id="micBtn" class="micBtn" aria-label="Dinle">🎤</button>
-        </div>
-
-        <div id="wave" class="wave" aria-hidden="true">
-          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-        </div>
-
-        <div id="transcript" class="transcript">Mikrofona dokunun ve sorun. (Örnek: "02.10.2025 tarihinde kaç kişi çalıştı?")</div>
-        <div class="footer">Ondalık kısımlar okunmaz (1000.23 → "bin"). Personel: tarih içindeki PERSONEL değerlerinin <b>maksimumu</b> kullanılır (birleştirilmiş hücre mantığı).</div>
-      </div>
-
-      <div class="right">
-        <div class="response" aria-live="polite">
-          <div id="userText" class="userText"></div>
-          <div id="resText" class="resText">Soru bekleniyor — örnek: "2 Ekim'de kaç kişi çalıştı?"</div>
-        </div>
-
-        <div class="examples" id="examples"></div>
-      </div>
-    </div>
+  <div id="examples">
+    ?? Örnek sorular:<br>
+    ?? 1 Ekim’de kaç firma üretim yaptı?<br>
+    ?? Pul biberden kaç kilo kullanıldı?<br>
+    ?? Kaç kişi çalıştı?<br>
+    ?? Toplam üretim miktarı ne kadar?<br>
+    ?? En çok hangi hammadde kullanıldı?<br>
   </div>
 
 <script>
-/* ================== VERI SATIRLARI ==================
-   Buraya Excel satırlarını aynı formatta yapıştırın.
-   Zorunlu alanlar:
-   URETIM_TARIH (dd.mm.yyyy or yyyy-mm-dd), STOK_ISMI, MIKTAR (adet), FIRMA,
-   KULLANILAN_HAMMADDE, KULLANILAN_HAMMADDE_MIKTAR (kg), PERSONEL (gün içi kişi sayısı), SURE_SAAT
-   ÖRNEK satırlar eklendi; kendi tam listenizi DATA_ROWS içinde ekleyin.
-*/
-const DATA_ROWS = [
-  // örnekler — bunları Excel'deki tüm satırlarla değiştirin/çoğaltın
-  {URETIM_TARIH:"01.10.2025", STOK_ISMI:"PUL BIBER 65G", MIKTAR:1200, FIRMA:"SEKERCI", KULLANILAN_HAMMADDE:"PULBIBER", KULLANILAN_HAMMADDE_MIKTAR:1200, PERSONEL:6, SURE_SAAT:9},
-  {URETIM_TARIH:"01.10.2025", STOK_ISMI:"LOKUM 500G", MIKTAR:889, FIRMA:"SOFRA", KULLANILAN_HAMMADDE:"NISASTA", KULLANILAN_HAMMADDE_MIKTAR:180, PERSONEL:6, SURE_SAAT:8},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"HAŞHAŞ TOHUMU MAVİ 1000G", MIKTAR:250, FIRMA:"RECEP CAN", KULLANILAN_HAMMADDE:"MAVI HASHAS", KULLANILAN_HAMMADDE_MIKTAR:250, PERSONEL:10, SURE_SAAT:8},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"PUL BIBER 1000G", MIKTAR:250, FIRMA:"RECEP CAN", KULLANILAN_HAMMADDE:"PULBIBER", KULLANILAN_HAMMADDE_MIKTAR:250, PERSONEL:10, SURE_SAAT:2},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"ISOT 1000G", MIKTAR:340, FIRMA:"SOFRA", KULLANILAN_HAMMADDE:"ISOT", KULLANILAN_HAMMADDE_MIKTAR:341, PERSONEL:10, SURE_SAAT:3},
-  {URETIM_TARIH:"03.10.2025", STOK_ISMI:"TOZ BIBER 500G", MIKTAR:500, FIRMA:"MESA", KULLANILAN_HAMMADDE:"TOZ BIBER", KULLANILAN_HAMMADDE_MIKTAR:500, PERSONEL:9, SURE_SAAT:7},
-  {URETIM_TARIH:"04.10.2025", STOK_ISMI:"PUL BIBER 250G", MIKTAR:800, FIRMA:"EVERGREEN", KULLANILAN_HAMMADDE:"PULBIBER", KULLANILAN_HAMMADDE_MIKTAR:800, PERSONEL:11, SURE_SAAT:9},
-  {URETIM_TARIH:"05.10.2025", STOK_ISMI:"GALETA UNU 1000G", MIKTAR:600, FIRMA:"MESA", KULLANILAN_HAMMADDE:"GALETA UNU", KULLANILAN_HAMMADDE_MIKTAR:600, PERSONEL:8, SURE_SAAT:6}
-  // --- EXCEL SATIRLARINIZI BURAYA TOPLU OLARAK EKLEYIN ---
-];
-
-/* ================== YARDIMCI FONKSIYONLAR ================== */
-function parseDateKey(s){
-  if(!s) return null;
-  s = String(s).trim();
-  const m1 = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{2,4})$/);
-  if(m1){ let d=m1[1].padStart(2,'0'), mo=m1[2].padStart(2,'0'), y=m1[3]; if(y.length===2) y='20'+y; return `${y}-${mo}-${d}`;}
-  const m2 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if(m2) return `${m2[1]}-${String(m2[2]).padStart(2,'0')}-${String(m2[3]).padStart(2,'0')}`;
-  const trMonths = {ocak:1,şubat:2,subat:2,mart:3,nisan:4,mayıs:5,mayis:5,haziran:6,temmuz:7,agustos:8,ağustos:8,eylül:9,eylul:9,ekim:10,kasım:11,kasim:11,aralık:12,aralik:12};
-  const m3 = s.match(/(\d{1,2})\s+([a-zığüşöçİĞÜŞÖÇ]+)(?:\s+(\d{4}))?/i);
-  if(m3){ const d = m3[1].padStart(2,'0'); const mn = m3[2].toLowerCase(); const y = m3[3] || (new Date()).getFullYear(); if(trMonths[mn]) return `${y}-${String(trMonths[mn]).padStart(2,'0')}-${d}`; }
-  const dt = new Date(s);
-  if(!isNaN(dt)){ const y=dt.getFullYear(),mo=String(dt.getMonth()+1).padStart(2,'0'),da=String(dt.getDate()).padStart(2,'0'); return `${y}-${mo}-${da}`;}
-  return null;
-}
-function speakableNumber(n){
-  const num = Math.round(Number(n||0));
-  if(num===1000) return 'bin';
-  return num.toLocaleString('tr-TR');
-}
-
-/* ========== AGREGASYON: GUN GUN TOPLAMA ========== */
-function aggregateRows(rows){
-  const map = {};
-  rows.forEach(r=>{
-    const key = parseDateKey(r.URETIM_TARIH) || 'unknown';
-    if(!map[key]) map[key] = {date:key, total_personel_candidates: new Set(), total_personel:0, total_uretim:0, total_hammadde_kg:0, firms:new Set(), products:new Map(), hammaddeMap:{}};
-    const node = map[key];
-    const adet = Number(r.MIKTAR || 0) || 0;
-    const pers = Number(r.PERSONEL || 0) || 0;
-    const hk = Number(r.KULLANILAN_HAMMADDE_MIKTAR || 0) || 0;
-    node.total_uretim += adet;
-    node.total_hammadde_kg += hk;
-    if(pers && pers>0) node.total_personel_candidates.add(pers);
-    if(r.FIRMA) node.firms.add(String(r.FIRMA).trim());
-    const productKey = String(r.STOK_ISMI || r.STOK || '').trim();
-    if(productKey){ node.products.set(productKey, (node.products.get(productKey)||0) + adet); }
-    const ham = String(r.KULLANILAN_HAMMADDE || '').toUpperCase().trim();
-    if(ham){ node.hammaddeMap[ham] = (node.hammaddeMap[ham]||0) + hk; }
-  });
-  // finalize
-  for(const k in map){
-    const m = map[k];
-    m.firmCount = m.firms.size;
-    m.firms = Array.from(m.firms);
-    if(m.total_personel_candidates.size>0) m.total_personel = Math.max(...Array.from(m.total_personel_candidates));
-    else m.total_personel = 0;
-    const entries = Object.entries(m.hammaddeMap).sort((a,b)=>b[1]-a[1]);
-    m.top_hammadde = entries.length ? {name: entries[0][0], kg: entries[0][1]} : null;
-    m.productList = Array.from(m.products.entries()).map(e=>({name:e[0], adet:e[1]}));
-  }
-  return map;
-}
-
-/* compute aggregation once (will update if DATA_ROWS changed) */
-let AGG = aggregateRows(DATA_ROWS);
-
-/* ensure days 2025-10-01 .. 2025-10-31 exist (fill zeros if missing) */
-function ensureMonthRange(year,month){
-  const res = {};
-  const days = new Date(year,month,0).getDate();
-  for(let d=1; d<=days; d++){
-    const key = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    if(AGG[key]) res[key] = AGG[key];
-    else res[key] = {date:key,total_personel:0,total_uretim:0,total_hammadde_kg:0,firmCount:0,productList:[],top_hammadde:null};
-  }
-  return res;
-}
-let MONTH_AGG = ensureMonthRange(2025,10); // October 2025
-
-/* ================= VOICE (Tolga öncelikli) ================= */
-function chooseTolgaVoice(){
-  const voices = speechSynthesis.getVoices() || [];
-  let v = voices.find(x => x.name && x.name.toLowerCase().includes('tolga'));
-  if(!v) v = voices.find(x => x.lang && x.lang.toLowerCase().startsWith('tr'));
-  return v || (voices.length?voices[0]:null);
-}
-let PREFERRED_VOICE = null;
-speechSynthesis.onvoiceschanged = ()=>{ PREFERRED_VOICE = chooseTolgaVoice(); };
-
-/* speak helper */
-function speakText(text){
-  try{
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'tr-TR';
-    PREFERRED_VOICE = PREFERRED_VOICE || chooseTolgaVoice();
-    if(PREFERRED_VOICE) u.voice = PREFERRED_VOICE;
-    u.rate = 1; u.pitch = 1;
-    speechSynthesis.speak(u);
-  }catch(e){ console.warn(e); }
-}
-
-/* ================= NLP & ANSWER ================= */
-function humanDateISO(key){
-  if(!key) return 'bilinmiyor';
-  const [y,m,d] = key.split('-'); const months=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-  return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
-}
-
-function answerQuery(query){
-  const q = String(query||'').toLowerCase();
-  // greetings
-  if(q.match(/\b(merhaba|selam|hey)\b/)) return "Merhaba! Hangi tarihin verisini istersiniz?";
-  if(q.match(/\b(nasılsın|nasil)\b/)) return "İyiyim, teşekkürler. Hangi gün için analiz istersiniz?";
-  // specific date extraction
-  const dateKey = (function(){
-    const m = q.match(/(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{2,4})/);
-    if(m){ let dd=m[1].padStart(2,'0'), mm=m[2].padStart(2,'0'), yy=m[3]; if(yy.length===2) yy='20'+yy; return `${yy}-${mm}-${dd}`; }
-    const m2 = q.match(/(\d{1,2})\s+(ekim|ek)\s*(\d{4})?/i);
-    if(m2){
-      const dd = m2[1].padStart(2,'0'); const mm = '10'; const yy = m2[3] || '2025';
-      return `${yy}-${mm}-${dd}`;
-    }
-    return null;
-  })();
-
-  if(dateKey){
-    const rec = AGG[dateKey] || MONTH_AGG[dateKey];
-    if(!rec) return `Seçtiğiniz tarih ${humanDateISO(dateKey)} için veri bulunamadı.`;
-    const kisi = speakableNumber(rec.total_personel || 0);
-    const firmaSay = rec.firmCount || 0;
-    const urunCes = rec.productList?rec.productList.length:0;
-    const adet = speakableNumber(rec.total_uretim || 0);
-    const hk = speakableNumber(rec.total_hammadde_kg || 0);
-    const topH = rec.top_hammadde ? `${rec.top_hammadde.name} (${speakableNumber(rec.top_hammadde.kg)} kg)` : 'yok';
-    const prodSample = (rec.productList && rec.productList.length)? rec.productList.slice(0,6).map(p=>`${p.name} ${speakableNumber(p.adet)} adet`).join(', '):'Ürün bilgisi yok';
-    return `${humanDateISO(dateKey)} için: ${kisi} kişi çalıştı. ${firmaSay} firmaya üretim yapıldı. ${urunCes} çeşit ürün üretildi. Toplam ${adet} adet üretim ve ${hk} kilogram hammadde kullanıldı. En çok kullanılan hammadde: ${topH}. Ürün örnekleri: ${prodSample}.`;
-  }
-
-  // month-wide queries for October
-  if(q.includes('ekim') || q.includes('1-31') || q.includes('1 31') || q.includes('1–31')){
-    // sum across month
-    let sumPersonel = 0, sumUretim = 0, sumHk = 0, firmsSet = new Set(), hammaddeTotals = {};
-    for(const day in MONTH_AGG){
-      const r = AGG[day] || MONTH_AGG[day];
-      sumUretim += Number(r.total_uretim||0);
-      sumHk += Number(r.total_hammadde_kg||0);
-      if(r.firms) r.firms.forEach(f=>firmsSet.add(f));
-      // personel: sum? user requested monthly persona: they gave monthly total separately; here provide both
-      sumPersonel = Math.max(sumPersonel, r.total_personel || 0); // show max per-day optionally
-      if(r.hammaddeMap){
-        for(const k in r.hammaddeMap) hammaddeTotals[k] = (hammaddeTotals[k]||0) + r.hammaddeMap[k];
-      }
-    }
-    // fallback to monthly summary if DATA_ROWS doesn't cover all days: also include provided monthly totals if needed
-    // determine top hammadde
-    const hEntries = Object.entries(hammaddeTotals).sort((a,b)=>b[1]-a[1]);
-    const topH = hEntries.length ? `${hEntries[0][0]} (${speakableNumber(hEntries[0][1])} kg)` : 'veri yok';
-    return `1-31 Ekim 2025 aralığı için (DATA_ROWS tabanlı): Toplam üretim ${speakableNumber(sumUretim)} adet, toplam kullanılan hammadde ${speakableNumber(sumHk)} kg. Günlük maksimum personel (en fazla olan gün): ${speakableNumber(sumPersonel)} kişi. Çalışılan farklı firma sayısı: ${firmsSet.size}. En çok kullanılan hammadde: ${topH}.`;
-  }
-
-  // firm-specific
-  if(q.includes('firma') || q.includes('şirket') || q.includes('kime')){
-    for(const row of DATA_ROWS){
-      const f = String(row.FIRMA||'').toLowerCase();
-      if(f && q.includes(f)) {
-        // aggregate for that firm across month
-        let u=0,h=0;
-        DATA_ROWS.forEach(r=>{ if(String(r.FIRMA||'').toLowerCase()===f){ u+=Number(r.MIKTAR||0); h+=Number(r.KULLANILAN_HAMMADDE_MIKTAR||0);} });
-        return `${row.FIRMA} için ay toplamı: ${speakableNumber(u)} adet üretim, ${speakableNumber(h)} kg hammadde kullanıldı.`;
-      }
+const veri = {
+  aylik: {
+    kisi: 418,
+    calisma_saat: 951.75,
+    uretim_adet: 212571,
+    toplam_hammadde: 99126.68,
+    fire: { hammadde: 5.48, omk: 28, opp: 15.8 },
+  },
+  firmalar: {
+    "SOFRA": { uretim: 31477, hammadde: 29055.17 },
+    "EVERGREEN": { uretim: 48122, hammadde: 9921.44 },
+    "MESA": { uretim: 70990, hammadde: 9804.16 },
+    "CASH&CARRY": { uretim: 13522, hammadde: 15307.8 },
+    "RECEP CAN": { uretim: 1952, hammadde: 4760.07 },
+  },
+  hammaddeler: {
+    "PULBİBER": 20107.24,
+    "KİMYON": 4475.46,
+    "TOZ BİBER": 14818.43,
+    "LİMON TUZU": 9441.8,
+    "GALETA UNU": 8770.1,
+  },
+  gunluk: {
+    "2025-10-01": {
+      firmalar: 6,
+      urunCesidi: 8,
+      uretimAdet: 3089,
+      hammaddeKg: 5412,
+      enCok: "Pul biber"
     }
   }
+};
 
-  // hammadde-specific overall
-  for(const r of DATA_ROWS){
-    const ham = String(r.KULLANILAN_HAMMADDE||'').toLowerCase();
-    if(ham && q.includes(ham)) {
-      let total=0;
-      DATA_ROWS.forEach(rr=>{ if(String(rr.KULLANILAN_HAMMADDE||'').toLowerCase()===ham) total += Number(rr.KULLANILAN_HAMMADDE_MIKTAR||0); });
-      return `${r.KULLANILAN_HAMMADDE} için ay toplamı: ${speakableNumber(total)} kg.`;
-    }
-  }
-
-  // fallback suggestion
-  return "Soru tam anlaşılmadı. Örnek: '02.10.2025'te kaç kişi çalıştı?', '1 Ekim'de kaç adet üretim yapıldı?' veya 'Ekim ayı toplamı nedir?'.";
+function sayiyiYaziya(sayi){
+  return Math.round(sayi).toLocaleString("tr-TR").replace(/\./g, " ");
 }
 
-/* ================= Recognition & UI Wiring ================== */
-const micBtn = document.getElementById('micBtn'), ring = document.getElementById('ring'), wave = document.getElementById('wave');
-const transcript = document.getElementById('transcript'), userText = document.getElementById('userText'), resText = document.getElementById('resText');
-const examplesRoot = document.getElementById('examples'), chartBtn = document.getElementById('chartBtn');
-
-const EXAMPLES = [
-  "02.10.2025 tarihinde kaç kişi çalıştı?",
-  "01.10.2025'te kaç adet üretim yapıldı?",
-  "Ekim ayı boyunca toplam üretim ne kadar?",
-  "SOFRA firmasına ay toplamında ne kadar üretim yapıldı?",
-  "Ekim ayında en çok hangi hammadde kullanıldı?"
-];
-EXAMPLES.forEach(t=>{ const el=document.createElement('div'); el.className='example'; el.innerText=t; el.onclick=()=>processQuery(t); examplesRoot.appendChild(el); });
-
-let recognition = null;
-function setupRecognition(){
-  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!Rec){ transcript.innerText='Tarayıcınız sesli komut desteklemiyor.'; return false; }
-  recognition = new Rec(); recognition.lang='tr-TR'; recognition.interimResults=false; recognition.continuous=false;
-  recognition.onstart = ()=>{ ring.classList.add('on'); wave.style.opacity='1'; transcript.innerText='DİNLENİYOR...'; };
-  recognition.onresult = async (ev)=>{ ring.classList.remove('on'); wave.style.opacity='0'; const txt = ev.results[0][0].transcript; transcript.innerText='SORDUN: '+txt; await processQuery(txt); };
-  recognition.onerror = (e)=>{ ring.classList.remove('on'); wave.style.opacity='0'; if(e.error==='not-allowed') { transcript.innerText='Mikrofon engellendi. Tarayıcı izinlerini kontrol edin.'; speakText('Mikrofon izni engellendi. Lütfen tarayıcı izinlerini kontrol edin.'); } else { transcript.innerText='Ses algılama hatası.'; } };
-  recognition.onend = ()=>{ ring.classList.remove('on'); wave.style.opacity='0'; };
-  return true;
+function cevapVer(metin) {
+  const synth = window.speechSynthesis;
+  const ses = new SpeechSynthesisUtterance(metin);
+  ses.lang = "tr-TR";
+  ses.pitch = 1;
+  ses.rate = 1;
+  ses.voice = synth.getVoices().find(v => v.name.toLowerCase().includes("male") || v.name.toLowerCase().includes("erkek")) || null;
+  synth.speak(ses);
 }
 
-async function ensureMicAndAnimate(){
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    try{
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const src = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser(); analyser.fftSize=256; src.connect(analyser);
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      function frame(){
-        analyser.getByteFrequencyData(data);
-        const bars = document.querySelectorAll('.bar');
-        for(let i=0;i<bars.length;i++){ const v = data[i*2]||0; const h = Math.min(140, 8 + Math.round(v/6)); bars[i].style.height = h + 'px'; }
-        if(ring.classList.contains('on')) requestAnimationFrame(frame);
-      }
-      frame();
-    }catch(e){ console.warn('analyser', e); }
-    return true;
-  }catch(e){
-    transcript.innerText='Mikrofon izni verilmedi veya tarayıcı desteklemiyor.'; speakText('Mikrofon izni verilmedi. Lütfen tarayıcı izinlerini kontrol edin.'); return false;
-  }
+function analizEt(soru) {
+  soru = soru.toLowerCase();
+  let cevap = "";
+
+  if(soru.includes("merhaba")) cevap = "Merhaba! Nasılsın?";
+  else if(soru.includes("nasılsın")) cevap = "Harikayım! Sen nasılsın?";
+  else if(soru.includes("kaç kişi")) cevap = `Toplam ${sayiyiYaziya(veri.aylik.kisi)} kişi çalıştı.`;
+  else if(soru.includes("toplam üretim")) cevap = `Toplam üretim ${sayiyiYaziya(veri.aylik.uretim_adet)} adet olarak gerçekleşti.`;
+  else if(soru.includes("pul biber")) cevap = `Pul biberden toplam ${sayiyiYaziya(veri.hammaddeler["PULBİBER"])} kilogram kullanıldı.`;
+  else if(soru.includes("en çok")) cevap = "Ay boyunca en çok Pul biber kullanıldı.";
+  else if(soru.includes("1 ekim")) cevap = `1 Ekim 2025 tarihinde ${veri.gunluk["2025-10-01"].firmalar} firma üretim yaptı, ${veri.gunluk["2025-10-01"].urunCesidi} çeşit ürün üretildi, toplam ${sayiyiYaziya(veri.gunluk["2025-10-01"].uretimAdet)} adet üretim yapıldı ve ${sayiyiYaziya(veri.gunluk["2025-10-01"].hammaddeKg)} kilogram hammadde kullanıldı. En çok ${veri.gunluk["2025-10-01"].enCok} üretildi.`;
+  else cevap = "Tam anlayamadım, acaba hangi gün veya hangi ürün hakkında bilgi almak istiyorsun?";
+
+  document.getElementById("output").innerText = cevap;
+  cevapVer(cevap);
 }
 
-document.getElementById('micBtn').addEventListener('click', async ()=>{
-  if(!setupRecognition()) return;
-  const ok = await ensureMicAndAnimate();
-  if(!ok) return;
-  try{ recognition.start(); }catch(e){ console.warn(e); transcript.innerText='Dinleme başlatılamadı.'; }
-});
-
-async function processQuery(q){
-  userText && (userText.innerText = 'Soru: ' + q);
-  resText && (resText.innerText = 'İşleniyor...');
-  await new Promise(r=>setTimeout(r,120));
-  const ans = answerQuery(q);
-  resText && (resText.innerText = ans);
-  try{ recognition && recognition.abort(); }catch(e){}
-  speakText(ans);
-}
-
-/* Chart button shows top hammadde from DATA_ROWS */
-chartBtn.addEventListener('click', ()=>{
-  const totals = {};
-  DATA_ROWS.forEach(r=>{ const h = String(r.KULLANILAN_HAMMADDE||'').toUpperCase().trim(); if(h) totals[h] = (totals[h]||0) + Number(r.KULLANILAN_HAMMADDE_MIKTAR||0); });
-  const entries = Object.entries(totals).sort((a,b)=>b[1]-a[1]).slice(0,20);
-  const labels = entries.map(e=>e[0]), data = entries.map(e=>e[1]);
-  const chartHtml = `<!doctype html><html><head><meta charset="utf-8"/><title>Hammadde Grafiği</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>body{background:#001222;color:#fff;font-family:Arial;padding:18px}</style></head><body><h3>En Çok Kullanılan Hammadde</h3><canvas id="c" width="1200" height="600"></canvas><script>const ctx=document.getElementById('c').getContext('2d'); new Chart(ctx,{type:'bar',data:{labels:${JSON.stringify(labels)},datasets:[{label:'Kg',data:${JSON.stringify(data)},backgroundColor:'rgba(0,217,255,0.9)'}]},options:{scales:{y:{beginAtZero:true}}}});</script></body></html>`;
-  const w = window.open('', '_blank'); w.document.write(chartHtml); w.document.close();
-});
-
-/* greeting */
-window.addEventListener('load', ()=>{
-  speechSynthesis.getVoices();
-  setTimeout(()=>{ PREFERRED_VOICE = chooseTolgaVoice(); const g = 'Merhaba, ben Sanita Sesli Analiz Robotu AI. Sormak istediğiniz günü ya da analizi söyleyin.'; speakText(g); transcript.innerText = 'Mikrofonu başlatmak için daireye dokunun.'; },500);
-});
+document.getElementById("mic").onclick = function(){
+  const rec = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+  rec.lang = "tr-TR";
+  rec.start();
+  document.getElementById("transcript").innerText = "??? Dinliyorum...";
+  rec.onresult = function(e){
+    const text = e.results[0][0].transcript;
+    document.getElementById("transcript").innerText = "??? " + text;
+    analizEt(text);
+  };
+  rec.onerror = function(){
+    document.getElementById("transcript").innerText = "? Mikrofon hatası. Lütfen yeniden deneyin.";
+  };
+};
 </script>
 </body>
 </html>
