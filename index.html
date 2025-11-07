@@ -2,69 +2,183 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sanita Sesli Analiz Robotu AI</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sanita Sesli Analiz Robotu AI — Final</title>
 <style>
-  body {font-family: 'Segoe UI', sans-serif; background:#f4f6f8; color:#222; margin:0; padding:0;}
-  header {background:#3a86ff; color:white; text-align:center; padding:20px; font-size:24px; font-weight:600;}
-  main {max-width:900px; margin:30px auto; background:white; border-radius:16px; padding:30px; box-shadow:0 4px 12px rgba(0,0,0,0.1);}
-  h2 {color:#3a86ff;}
-  button {background:#3a86ff; color:white; border:none; border-radius:10px; padding:10px 18px; cursor:pointer; font-size:16px;}
-  button:hover {background:#265df2;}
-  .data-section {margin-top:25px;}
-  table {width:100%; border-collapse:collapse; margin-top:15px;}
-  th, td {border:1px solid #ddd; padding:8px; text-align:left;}
-  th {background:#3a86ff; color:white;}
-  .question-list {background:#f1f5ff; padding:15px; border-radius:10px; margin-top:20px;}
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+  :root{--bg1:#00111e;--bg2:#000814;--accent:#00f5d4;--accent2:#00eaff;--card:rgba(0,36,66,0.6);--text:#fff}
+  body.light{--bg1:#f1f9ff;--bg2:#cce7ff;--accent:#0077b6;--accent2:#00b4d8;--card:rgba(255,255,255,0.9);--text:#002244}
+  body{margin:0;min-height:100vh;background:radial-gradient(circle at 20% 10%,var(--bg1),var(--bg2));color:var(--text);font-family:Poppins,system-ui,Segoe UI,Arial;display:flex;flex-direction:column;align-items:center;padding:28px;transition:all .45s}
+  header{max-width:1100px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{margin:0;font-size:1.6rem;color:var(--accent);text-shadow:0 0 18px var(--accent2)}
+  .controls{display:flex;gap:10px;align-items:center}
+  select,button{background:linear-gradient(135deg,var(--accent2),var(--accent));color:var(--text);border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.15);transition:transform .18s}
+  main{max-width:1100px;width:100%;margin-top:18px;display:grid;grid-template-columns:1fr 420px;gap:22px}
+  .panel{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 8px 40px rgba(0,0,0,.25)}
+  .mic{width:120px;height:120px;border-radius:999px;background:linear-gradient(145deg,var(--accent2),var(--accent));display:flex;align-items:center;justify-content:center;font-size:46px;margin:8px auto;cursor:pointer;box-shadow:0 0 32px var(--accent2);transition:transform .2s}
+  .mic:hover{transform:scale(1.06)}
+  .wave{height:12px;background:linear-gradient(90deg,transparent,var(--accent2),transparent);border-radius:12px;margin:12px auto;width:220px;animation:wave 1.3s ease-in-out infinite}
+  @keyframes wave{0%{width:100px;opacity:.4}50%{width:260px;opacity:1}100%{width:100px;opacity:.4}}
+  #transcript{margin:8px 0;text-align:center;color:var(--accent2);font-weight:600}
+  #output{min-height:56px;text-align:center;padding:8px;border-radius:10px;background:transparent;color:var(--text);font-weight:600}
+  .stats{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:12px}
+  .stat{background:rgba(255,255,255,0.03);padding:10px 12px;border-radius:10px;min-width:140px;text-align:center}
+  .stat h4{margin:0;font-size:.9rem;color:var(--accent)}
+  .stat p{margin:6px 0 0;font-weight:700}
+  .examples{height:720px;overflow:auto;padding:16px}
+  .examples h3{margin-top:0;color:var(--accent)}
+  .category{margin-bottom:12px;padding:10px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent)}
+  .cat-title{font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .cat-qs{display:flex;flex-direction:column;gap:8px;padding-left:6px}
+  .q{display:flex;align-items:center;gap:10px;background:transparent;padding:6px;border-radius:8px}
+  .emoji{font-size:20px;flex:0 0 34px;display:flex;align-items:center;justify-content:center}
+  footer{margin-top:18px;color:var(--accent2)}
+  @media(max-width:980px){main{grid-template-columns:1fr;}.examples{height:420px}}
+  a.download{display:inline-block;margin-left:8px;background:transparent;border:1px solid rgba(255,255,255,0.12);padding:8px 12px;border-radius:10px;color:var(--text);text-decoration:none;}
 </style>
 </head>
 <body>
-<header>📊 Sanita Sesli Analiz Robotu AI</header>
+<header>
+  <h1>🎙️ Sanita Sesli Analiz Robotu AI</h1>
+  <div class="controls">
+    <select id="voiceSelect" title="Ses seçimi">
+      <option value="female">👩 Kadın Sesi</option>
+      <option value="male">👨 Erkek Sesi</option>
+    </select>
+    <button id="themeToggle">🌙 Tema Değiştir</button>
+    <a id="downloadLink" class="download" href="#" download="sanita-sesli-analiz.html">⬇️ İndir</a>
+  </div>
+</header>
+
 <main>
-  <section>
-    <h2>🔹 Aylık Üretim ve Hammadde Özeti</h2>
-    <table>
-      <tr><th>Veri</th><th>Değer</th></tr>
-      <tr><td>Kişi Sayısı</td><td>418</td></tr>
-      <tr><td>Çalışma Süresi (saat)</td><td>951,75</td></tr>
-      <tr><td>Üretim Miktarı (adet)</td><td>211.991</td></tr>
-      <tr><td>Toplam Kullanılan Hammadde (kg)</td><td>99.126,68</td></tr>
-      <tr><td>Hammadde Fire (%)</td><td>5,48</td></tr>
-      <tr><td>OMK Fire</td><td>28,00</td></tr>
-      <tr><td>OPP (Bobin) Fire</td><td>15,80</td></tr>
-    </table>
+  <section class="panel">
+    <div style="text-align:center">
+      <div id="mic" class="mic" aria-label="Mikrofon">🎤</div>
+      <div class="wave" aria-hidden></div>
+      <div id="transcript">🔈 Konuşmak için mikrofona dokun.</div>
+      <div id="output"></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div style="margin-top:14px;text-align:center">
+      <small style="opacity:.85">Veriler: kullanıcı tarafından sağlanan aylık toplamlara göre gömülmüştür. Soru listeleri kategorilere göre 3'er örnek içerir.</small>
+    </div>
   </section>
-  <section class="data-section">
-    <h2>🏭 Firma Bazlı Üretim ve Hammadde Tüketimi</h2>
-    <table>
-      <tr><th>Firma</th><th>Üretim Miktarı</th><th>Toplam Kullanılan Hammadde (kg)</th></tr>
-      <tr><td>SOFRA</td><td>31.477</td><td>29.055,17</td></tr>
-      <tr><td>KERVAN</td><td>764</td><td>764,00</td></tr>
-      <tr><td>RECEP CAN</td><td>1.952</td><td>4.760,07</td></tr>
-      <tr><td>EVERGREEN</td><td>48.122</td><td>9.921,44</td></tr>
-      <tr><td>BEDİR TEDARİK</td><td>1.964</td><td>1.702,30</td></tr>
-      <tr><td>ŞEKERCİ</td><td>10.484</td><td>11.828,14</td></tr>
-      <tr><td>MESA</td><td>70.990</td><td>9.804,16</td></tr>
-      <tr><td>CASH&CARRY</td><td>13.522</td><td>15.307,80</td></tr>
-      <tr><td>GENEL TOPLAM</td><td>211.991</td><td>98.546,68</td></tr>
-    </table>
-  </section>
-  <section class="question-list">
-    <h2>🎙️ Örnek Sorular</h2>
-    <ul>
-      <li>Bu ay toplam üretim miktarı nedir?</li>
-      <li>En fazla üretim yapan firma hangisidir?</li>
-      <li>Toplam kullanılan hammadde miktarı kaç kg?</li>
-      <li>Hammadde fire oranı nedir?</li>
-      <li>Kişi başına ortalama üretim miktarı kaçtır?</li>
-      <li>Hangi firmanın üretim miktarı en düşüktür?</li>
-      <li>Toplam fire miktarını yüzdelik olarak görebilir miyim?</li>
-      <li>Firmanın hammadde/üretim oranı kaçtır?</li>
-      <li>Aylık ortalama çalışma saati nedir?</li>
-      <li>Hammadde verimliliği ne kadar?</li>
-    </ul>
-  </section>
+
+  <aside class="panel examples">
+    <h3>💡 Örnek Soru Kategorileri (Her kategoriden 3 örnek)</h3>
+
+    <div class="category">
+      <div class="cat-title">👥 <span>Personel & Çalışma Süresi</span></div>
+      <div class="cat-qs">
+        <div class="q"><div class="emoji">👷</div><div>Kaç kişi çalıştı bu ay?</div></div>
+        <div class="q"><div class="emoji">⏱️</div><div>Toplam çalışma süresi kaç saattir?</div></div>
+        <div class="q"><div class="emoji">📊</div><div>Kişi başına ortalama üretim ne kadar?</div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-title">🏭 <span>Üretim Bilgileri</span></div>
+      <div class="cat-qs">
+        <div class="q"><div class="emoji">📦</div><div>Toplam üretim miktarı nedir?</div></div>
+        <div class="q"><div class="emoji">⚙️</div><div>Ortalama saatlik üretim kaç adettir?</div></div>
+        <div class="q"><div class="emoji">📈</div><div>1 adet için ortalama hammadde tüketimi nedir?</div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-title">🧂 <span>Hammadde Bilgileri</span></div>
+      <div class="cat-qs">
+        <div class="q"><div class="emoji">🌶️</div><div>Pul biberinden kaç kilo kullanıldı?</div></div>
+        <div class="q"><div class="emoji">🥣</div><div>Toplam kullanılan hammadde miktarı nedir?</div></div>
+        <div class="q"><div class="emoji">🔎</div><div>Ay boyunca en çok hangi hammadde kullanıldı?</div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-title">🏢 <span>Firma Üretimleri</span></div>
+      <div class="cat-qs">
+        <div class="q"><div class="emoji">🏷️</div><div>SOFRA firmasının üretim miktarı nedir?</div></div>
+        <div class="q"><div class="emoji">🌾</div><div>MESA firmasının kullandığı toplam hammadde kaç kg?</div></div>
+        <div class="q"><div class="emoji">🔎</div><div>En fazla üretim yapan firma hangisidir?</div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-title">🔥 <span>Fire Bilgileri</span></div>
+      <div class="cat-qs">
+        <div class="q"><div class="emoji">⚠️</div><div>Toplam hammadde fire miktarı kaç kg?</div></div>
+        <div class="q"><div class="emoji">🧾</div><div>OMK ve OPP fire toplamı nedir?</div></div>
+        <div class="q"><div class="emoji">📉</div><div>Fire oranı toplam hammaddeye göre yüzde kaç?</div></div>
+      </div>
+    </div>
+
+    <div class="category">
+      <div class="cat-title">📅 <span>Günlük / Aylık Özet</span></div>
+      <div class="cat-qs">
+        <div class="q"><div class="emoji">🗓️</div><div>Aylık toplam hammadde kaç kg olarak kaydedilmiş?</div></div>
+        <div class="q"><div class="emoji">📊</div><div>Genel toplam üretim 211.991 adet midir?</div></div>
+        <div class="q"><div class="emoji">✅</div><div>Veri setine göre en verimli üç firma hangileridir?</div></div>
+      </div>
+    </div>
+
+  </aside>
 </main>
-</body>
-</html>
+
+<footer>Sanita AI · Statik HTML — Veriler sayfaya gömülüdür.</footer>
+
+<script>
+// ========== GÖMÜLÜ VERİLER ==========
+// Aylık toplamlar — tam olarak kullanıcının verdiği değerlerle (nokta ayırıcı)
+const DATA = {
+  aylik: {
+    kisi: 418.00,
+    calisma_saat: 951.75,
+    uretim_adet: 211991.00,
+    toplam_hammadde: 99126.68, // kullanıcının verdiği aylık toplam
+    hammadde_fire: 5.48,
+    omk_fire: 28.00,
+    opp_fire: 15.80
+  },
+  firmalar: {
+    "SOFRA":{uret:31477, hammadde:29055.17},
+    "KERVAN":{uret:764, hammadde:764.00},
+    "RECEP CAN":{uret:1952, hammadde:4760.07},
+    "EVERGREEN":{uret:48122, hammadde:9921.44},
+    "BEDİR TEDARİK":{uret:1964, hammadde:1702.30},
+    "ÖNEN GIDA":{uret:100, hammadde:100.00},
+    "ÇELİK NATUREL":{uret:100, hammadde:100.00},
+    "ŞEKERCİ":{uret:10484, hammadde:11828.14},
+    "GENİM GIDA":{uret:5173, hammadde:4760.51},
+    "AKAR FOOD":{uret:11454, hammadde:1170.48},
+    "MAUN GIDA":{uret:550, hammadde:550.00},
+    "VENÜS":{uret:3660, hammadde:2579.00},
+    "ANADOLU ÜNİVERSİTESİ":{uret:340, hammadde:310.00},
+    "EKOL FOOD":{uret:864, hammadde:723.00},
+    "SANITA EVERGREEN":{uret:672, hammadde:336.00},
+    "MESA":{uret:70990, hammadde:9804.16},
+    "CASH&CARRY":{uret:13522, hammadde:15307.80},
+    "BORTAR":{uret:797, hammadde:703.50},
+    "VKS":{uret:1794, hammadde:1002.00},
+    "HABİP ALBAYRAK":{uret:1086, hammadde:1008.15},
+    "FATSAT":{uret:320, hammadde:320.00},
+    "NIOLES":{uret:750, hammadde:340.65},
+    "SALEH":{uret:4224, hammadde:1024.32},
+    "KIRÇİÇEĞİ":{uret:50, hammadde:50.00},
+    "MAYA CATERİNG":{uret:42, hammadde:36.00},
+    "T DÖNER":{uret:500, hammadde:50.00},
+    "FRESH FOOD":{uret:50, hammadde:50.00},
+    "EGES YEMEK":{uret:190, hammadde:190.00},
+    // Not: kullanıcı tarafından verilen 'GENEL TOPLAM' (firma tablosu) = 98546.68
+    "_GENEL_TOPLAM_FIRMA_HAMMADDE": 98546.68
+  }
+};
+
+// ========== YARDIMCI ==========
+function fmt(n){ if(typeof n === 'number') return n.toLocaleString('tr-TR'); return n; }
+function toplamFirma(key){ return Object.values(DATA.firmalar).reduce((s,v)=>s+((v[key]||0)),0); }
+function enYuksek(k){ const arr = Object.entries(DATA.firmalar).filter(([kname])=>!kname.startsWith('_')).map(([kname,v])=>({firma:kname,val:v[k]})); arr.sort((a,b)=>b.val-a.val); return arr; }
+
+// ========== İSTATİSTİK KARTLARI ==========\nconst statsEl = document.getElementById('stats');\nconst s = DATA.aylik;\nconst toplamFire = s.hammadde_fire + s.omk_fire + s.opp_fire;\nconst kisiBasiUretim = s.uretim_adet / s.kisi;\nconst saatlikUretim = s.uretim_adet / s.calisma_saat;\nconst ortHammaddePerUrun = s.toplam_hammadde / s.uretim_adet;\n\nconst cards = [\n  {t:'Kişi Sayısı',v:fmt(s.kisi)},\n  {t:'Çalışma Süresi (saat)',v:fmt(s.calisma_saat)},\n  {t:'Toplam Üretim (adet)',v:fmt(s.uretim_adet)},\n  {t:'Toplam Hammadde (kg) (AYLIK GÖMÜLEN)',v:fmt(s.toplam_hammadde)},\n  {t:'Toplam Fire (kg)',v:fmt(toplamFire.toFixed(2))},\n  {t:'Kişi başı üretim (adet)',v:fmt(kisiBasiUretim.toFixed(2))},\n  {t:'Saatlik üretim (adet/saat)',v:fmt(saatlikUretim.toFixed(2))},\n  {t:'Ortalama hammadde/adet (kg)',v:fmt(ortHammaddePerUrun.toFixed(4))}\n];\ncards.forEach(c=>{ const el=document.createElement('div'); el.className='stat'; el.innerHTML=`<h4>${c.t}</h4><p>${c.v}</p>`; statsEl.appendChild(el); });\n\n// ========== SES AYARLARI ==========\nconst voiceSelect = document.getElementById('voiceSelect');\nlet voices = [];\nfunction loadVoices(){ voices = speechSynthesis.getVoices(); }\nloadVoices(); if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged = loadVoices;\nfunction speak(text){ const ut = new SpeechSynthesisUtterance(text); ut.lang='tr-TR'; ut.rate=1; ut.pitch=1; const pref=voiceSelect.value; const candidate = voices.find(v=>{ const n=v.name.toLowerCase(); if(pref==='male') return n.includes('male')||n.includes('erkek'); return n.includes('female')||n.includes('kadın'); }) || voices.find(v=>v.lang && v.lang.startsWith('tr')) || null; if(candidate) ut.voice=candidate; speechSynthesis.cancel(); speechSynthesis.speak(ut); }\n\n// ========== ANALİZ & CEVAP MEKANİZMASI ==========\nconst output = document.getElementById('output');\nfunction analizEt(text){ const t = text.toLowerCase(); let res = 'Tam anlayamadım 🤔 Lütfen farklı bir soru sor.';\n  // Genel\n  if(t.includes('toplam üretim')||t.includes('toplam üretim miktarı')||t.includes('üretim miktarı nedir')){\n    res = `Toplam üretim ${fmt(DATA.aylik.uretim_adet)} adet.`;\n  } else if(t.includes('toplam hammadde')||t.includes('toplam kullanılan hammadde')){\n    res = `Toplam kullanılan hammadde ${fmt(DATA.aylik.toplam_hammadde)} kg (AYLIK GÖMÜLEN DEĞER).`;\n  } else if(t.includes('kaç kişi')||t.includes('kişi sayısı')||t.includes('çalışan sayısı')){\n    res = `Toplam ${fmt(DATA.aylik.kisi)} kişi çalıştı.`;\n  } else if(t.includes('çalışma süresi')||t.includes('çalışma saati')||t.includes('saat')){\n    res = `Toplam çalışma süresi ${fmt(DATA.aylik.calisma_saat)} saattir.`;\n  } else if(t.includes('hammadde fire')||t.includes('hammadde fir')){\n    res = `Hammadde fire ${fmt(DATA.aylik.hammadde_fire)} kg, OMK fire ${fmt(DATA.aylik.omk_fire)} kg, OPP fire ${fmt(DATA.aylik.opp_fire)} kg. Toplam fire ${fmt(toplamFire.toFixed(2))} kg.`;\n  } else if(t.includes('kişi başı')||t.includes('kişi başına')){\n    res = `Kişi başına düşen üretim ${fmt(kisiBasiUretim.toFixed(2))} adet.`;\n  } else if(t.includes('saatlik üretim')||t.includes('1 saatte')||t.includes('saatte')){\n    res = `Ortalama saatlik üretim ${fmt(saatlikUretim.toFixed(2))} adettir.`;\n  } else if((t.includes('ortalama hammadde')||t.includes('1 adet'))&&t.includes('hammadde')){\n    res = `Ortalama hammadde kullanımı ${fmt(ortHammaddePerUrun.toFixed(4))} kg/adet.`;\n  }\n\n  // Firma sorguları\n  const firmNames = Object.keys(DATA.firmalar).filter(k=>!k.startsWith('_'));\n  for(const f of firmNames){ const key = f.toLowerCase(); if(t.includes(key)){\n      const info = DATA.firmalar[f];\n      if(t.includes('üretim')||t.includes('üretim miktarı')||t.includes('kaç adet')){ res = `${f} firmasının üretim miktarı ${fmt(info.uret)} adettir.`; }\n      else if(t.includes('hammadde')||t.includes('kull')||t.includes('kg')){ res = `${f} firmasının kullandığı toplam hammadde ${fmt(info.hammadde)} kg.`; }\n      else if(t.includes('1 adet')||t.includes('adet baş')||t.includes('bir adet')||t.includes('ortalama')){ const per = info.hammadde/(info.uret||1); res = `${f} için ortalama hammadde/adet ${fmt(per.toFixed(4))} kg.`; }\n    }}\n\n  // En yüksek / en düşük\n  if(t.includes('en fazla üretim')||t.includes('en çok üretim')||t.includes('en fazla üretim yapan')){\n    const top = enYuksek('uret')[0]; res = `En fazla üretim yapan firma ${top.firma} — ${fmt(top.val)} adet.`;\n  } else if(t.includes('en az üretim')||t.includes('en düşük üretim')){\n    const arr = enYuksek('uret'); const bot = arr[arr.length-1]; res = `En az üretim yapan firma ${bot.firma} — ${fmt(bot.val)} adet.`;\n  } else if(t.includes('en çok hammadde')||t.includes('en fazla hammadde')){\n    const top = enYuksek('hammadde')[0]; res = `En çok hammadde kullanan firma ${top.firma} — ${fmt(top.val)} kg.`;\n  }\n\n  // Verimlilik (basit) - üretim/hammadde\n  if(t.includes('en verimli')||t.includes('verimlilik')){\n    const arr = Object.entries(DATA.firmalar).filter(([k])=>!k.startsWith('_')).map(([k,v])=>({firma:k,ratio:(v.uret/(v.hammadde||1)),uret:v.uret,hammadde:v.hammadde}));\n    arr.sort((a,b)=>b.ratio-a.ratio);\n    const top3 = arr.slice(0,3).map(x=>`${x.firma} (${x.ratio.toFixed(3)})`);\n    res = `En verimli ilk 3 firma: ${top3.join(', ')}.`;\n  }\n\n  output.innerText = res; try{ speak(res); }catch(e){}\n}\n\n// ========== MİKROFON ==========\nconst mic = document.getElementById('mic'); const transcript = document.getElementById('transcript');\nif(!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)){\n  transcript.innerText = '⚠️ Tarayıcınız SpeechRecognition desteklemiyor. Metin ile sorabilirsiniz.'; mic.style.opacity=.6; mic.style.cursor='not-allowed';\n} else {\n  mic.onclick = ()=>{ const Rec = window.SpeechRecognition || window.webkitSpeechRecognition; const rec = new Rec(); rec.lang='tr-TR'; rec.interimResults=false; rec.maxAlternatives=1; rec.start(); transcript.innerText='🎧 Dinleniyor... Konuşun.'; rec.onresult=(e)=>{ const text=e.results[0][0].transcript; transcript.innerText='🗣️ '+text; analizEt(text); }; rec.onerror=()=>{ transcript.innerText='⚠️ Mikrofon hatası, lütfen tekrar deneyin.'; } } }\n\n// ========== TEMA & İNDİRME LINK ==========\nconst themeToggle = document.getElementById('themeToggle');\nfunction applySavedTheme(){ if(localStorage.getItem('sanita_theme')==='light'){ document.body.classList.add('light'); themeToggle.textContent='🌑 Karanlık Tema'; } else { document.body.classList.remove('light'); themeToggle.textContent='🌙 Aydınlık Tema'; } }\napplySavedTheme(); themeToggle.onclick=()=>{ document.body.classList.toggle('light'); localStorage.setItem('sanita_theme', document.body.classList.contains('light')?'light':'dark'); applySavedTheme(); };\n\n// ========== DOWLOAD LINK DOLDUR ==========\n// Create a blob and set href so user can download the exact same HTML\nconst downloadLink = document.getElementById('downloadLink');\nconst fullHTML = document.documentElement.outerHTML;\nconst blob = new Blob([fullHTML], {type: 'text/html'});\nconst url = URL.createObjectURL(blob);\ndownloadLink.href = url;\n\n// ========== İlk sesli ipucu ==========\nsetTimeout(()=>{ const intro = 'Sanita hazır. Örnek sorulardan birini sorabilirsiniz.'; try{ speak(intro); }catch(e){} },700);\n</script>\n</body>\n</html>
