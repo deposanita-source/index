@@ -1,180 +1,170 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sanita Bilgi Asistanı</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f4f4f4;
-            color: #333;
-        }
-        header {
-            background: #007acc;
-            color: white;
-            padding: 1rem;
-            text-align: center;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-        main {
-            padding: 1rem;
-            max-width: 900px;
-            margin: auto;
-            background: white;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            border-radius: 8px;
-        }
-        #output {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: #e9e9e9;
-            border-radius: 5px;
-            min-height: 150px;
-            white-space: pre-wrap;
-            font-family: monospace;
-        }
-        label {
-            display: block;
-            margin-top: 1rem;
-            font-weight: bold;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 0.5rem;
-            font-size: 1rem;
-            margin-top: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            margin-top: 1rem;
-            padding: 0.7rem 1.5rem;
-            font-size: 1rem;
-            background: #007acc;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #005fa3;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 0.5rem;
-            text-align: center;
-        }
-        th {
-            background: #007acc;
-            color: white;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanita Sesli Analiz Robotu AI</title>
+<style>
+  body {
+    background: radial-gradient(circle, #0d1b2a, #1b263b);
+    color: white;
+    font-family: "Segoe UI", sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  h1 {
+    color: #00d9ff;
+    font-weight: 600;
+  }
+  #mic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #00b4d8, #0077b6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 30px auto;
+    cursor: pointer;
+    box-shadow: 0 0 20px #00d9ff;
+    transition: all 0.3s ease;
+  }
+  #mic:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 40px #00e0ff;
+  }
+  .wave {
+    width: 100%;
+    height: 6px;
+    background: #00d9ff;
+    margin: 10px auto;
+    border-radius: 5px;
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0% {opacity: 0.3;}
+    50% {opacity: 1;}
+    100% {opacity: 0.3;}
+  }
+  #output, #transcript {
+    margin-top: 20px;
+    font-size: 18px;
+  }
+  #examples {
+    margin-top: 25px;
+    font-size: 16px;
+    color: #90e0ef;
+  }
+  button {
+    background: #0077b6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  button:hover {
+    background: #00b4d8;
+  }
+</style>
 </head>
 <body>
-    <header>Sanita Bilgi Asistanı</header>
-    <main>
-        <label for="firmaInput">Firma Adı Giriniz:</label>
-        <input type="text" id="firmaInput" placeholder="Örnek: SOFRA" />
-        <button onclick="sorgula()">Sorgula</button>
-        <div id="output"></div>
-        <table id="dataTable" style="display:none;">
-            <thead>
-                <tr>
-                    <th>Firma</th>
-                    <th>Üretim Miktarı</th>
-                    <th>Toplam Kullanılan Hammadde Miktarı (kg)</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </main>
-    <script>
-        const firmalar = [
-            {firma: "SOFRA", uretim: 31477.00, hammadde: 29055.17},
-            {firma: "KERVAN", uretim: 764.00, hammadde: 764.00},
-            {firma: "RECEP CAN", uretim: 1952.00, hammadde: 4760.07},
-            {firma: "EVERGREEN", uretim: 48122.00, hammadde: 9921.44},
-            {firma: "BEDİR TEDARİK", uretim: 1964.00, hammadde: 1702.30},
-            {firma: "ÖNEN GIDA", uretim: 100.00, hammadde: 100.00},
-            {firma: "ÇELİK NATUREL", uretim: 100.00, hammadde: 100.00},
-            {firma: "ŞEKERCİ", uretim: 10484.00, hammadde: 11828.14},
-            {firma: "GENİM GIDA", uretim: 5173.00, hammadde: 4760.51},
-            {firma: "AKAR FOOD", uretim: 11454.00, hammadde: 1170.48},
-            {firma: "MAUN GIDA", uretim: 550.00, hammadde: 550.00},
-            {firma: "VENÜS", uretim: 3660.00, hammadde: 2579.00},
-            {firma: "ANADOLU ÜNİVERSİTESİ", uretim: 340.00, hammadde: 310.00},
-            {firma: "EKOL FOOD", uretim: 864.00, hammadde: 723.00},
-            {firma: "SANITA EVERGREEN", uretim: 672.00, hammadde: 336.00},
-            {firma: "MESA", uretim: 70990.00, hammadde: 9804.16},
-            {firma: "CASH&CARRY", uretim: 13522.00, hammadde: 15307.80},
-            {firma: "BORTAR", uretim: 797.00, hammadde: 703.50},
-            {firma: "VKS", uretim: 1794.00, hammadde: 1002.00},
-            {firma: "HABİP ALBAYRAK", uretim: 1086.00, hammadde: 1008.15},
-            {firma: "FATSAT", uretim: 320.00, hammadde: 320.00},
-            {firma: "NIOLES", uretim: 750.00, hammadde: 340.65},
-            {firma: "SALEH", uretim: 4224.00, hammadde: 1024.32},
-            {firma: "KIRÇİÇEĞİ", uretim: 50.00, hammadde: 50.00},
-            {firma: "MAYA CATERİNG", uretim: 42.00, hammadde: 36.00},
-            {firma: "T DÖNER", uretim: 500.00, hammadde: 50.00},
-            {firma: "FRESH FOOD", uretim: 50.00, hammadde: 50.00},
-            {firma: "EGES YEMEK", uretim: 190.00, hammadde: 190.00}
-        ];
+  <h1>🤖 Sanita Sesli Analiz Robotu AI</h1>
+  <div id="mic">🎤</div>
+  <div class="wave"></div>
+  <p id="transcript">Konuşmak için mikrofona dokun.</p>
+  <div id="output"></div>
 
-        function formatNumber(num) {
-            return num.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        }
+  <div id="examples">
+    💬 Örnek sorular:<br>
+    🏭 1 Ekim’de kaç firma üretim yaptı?<br>
+    ⚙️ Pul biberden kaç kilo kullanıldı?<br>
+    👷 Kaç kişi çalıştı?<br>
+    📦 Toplam üretim miktarı ne kadar?<br>
+    💡 En çok hangi hammadde kullanıldı?<br>
+  </div>
 
-        function sorgula() {
-            const input = document.getElementById('firmaInput').value.trim().toUpperCase();
-            const output = document.getElementById('output');
-            const table = document.getElementById('dataTable');
-            const tbody = table.querySelector('tbody');
+<script>
+const veri = {
+  aylik: {
+    kisi: 418,
+    calisma_saat: 951.75,
+    uretim_adet: 212571,
+    toplam_hammadde: 99126.68,
+    fire: { hammadde: 5.48, omk: 28, opp: 15.8 },
+  },
+  firmalar: {
+    "SOFRA": { uretim: 31477, hammadde: 29055.17 },
+    "EVERGREEN": { uretim: 48122, hammadde: 9921.44 },
+    "MESA": { uretim: 70990, hammadde: 9804.16 },
+    "CASH&CARRY": { uretim: 13522, hammadde: 15307.8 },
+    "RECEP CAN": { uretim: 1952, hammadde: 4760.07 },
+  },
+  hammaddeler: {
+    "PULBİBER": 20107.24,
+    "KİMYON": 4475.46,
+    "TOZ BİBER": 14818.43,
+    "LİMON TUZU": 9441.8,
+    "GALETA UNU": 8770.1,
+  },
+  gunluk: {
+    "2025-10-01": {
+      firmalar: 6,
+      urunCesidi: 8,
+      uretimAdet: 3089,
+      hammaddeKg: 5412,
+      enCok: "Pul biber"
+    }
+  }
+};
 
-            if (!input) {
-                output.textContent = 'Lütfen bir firma adı giriniz.';
-                table.style.display = 'none';
-                return;
-            }
+function sayiyiYaziya(sayi){
+  return Math.round(sayi).toLocaleString("tr-TR").replace(/\./g, " ");
+}
 
-            const firmaData = firmalar.find(f => f.firma.toUpperCase() === input);
+function cevapVer(metin) {
+  const synth = window.speechSynthesis;
+  const ses = new SpeechSynthesisUtterance(metin);
+  ses.lang = "tr-TR";
+  ses.pitch = 1;
+  ses.rate = 1;
+  ses.voice = synth.getVoices().find(v => v.name.toLowerCase().includes("male") || v.name.toLowerCase().includes("erkek")) || null;
+  synth.speak(ses);
+}
 
-            if (!firmaData) {
-                output.textContent = 'Firma bulunamadı. Lütfen geçerli bir firma adı giriniz.';
-                table.style.display = 'none';
-                return;
-            }
+function analizEt(soru) {
+  soru = soru.toLowerCase();
+  let cevap = "";
 
-            output.textContent = `Firma: ${firmaData.firma}\nÜretim Miktarı: ${formatNumber(firmaData.uretim)}\nToplam Kullanılan Hammadde Miktarı (kg): ${formatNumber(firmaData.hammadde)}`;
+  if(soru.includes("merhaba")) cevap = "Merhaba! Nasılsın?";
+  else if(soru.includes("nasılsın")) cevap = "Harikayım! Sen nasılsın?";
+  else if(soru.includes("kaç kişi")) cevap = `Toplam ${sayiyiYaziya(veri.aylik.kisi)} kişi çalıştı.`;
+  else if(soru.includes("toplam üretim")) cevap = `Toplam üretim ${sayiyiYaziya(veri.aylik.uretim_adet)} adet olarak gerçekleşti.`;
+  else if(soru.includes("pul biber")) cevap = `Pul biberden toplam ${sayiyiYaziya(veri.hammaddeler["PULBİBER"])} kilogram kullanıldı.`;
+  else if(soru.includes("en çok")) cevap = "Ay boyunca en çok Pul biber kullanıldı.";
+  else if(soru.includes("1 ekim")) cevap = `1 Ekim 2025 tarihinde ${veri.gunluk["2025-10-01"].firmalar} firma üretim yaptı, ${veri.gunluk["2025-10-01"].urunCesidi} çeşit ürün üretildi, toplam ${sayiyiYaziya(veri.gunluk["2025-10-01"].uretimAdet)} adet üretim yapıldı ve ${sayiyiYaziya(veri.gunluk["2025-10-01"].hammaddeKg)} kilogram hammadde kullanıldı. En çok ${veri.gunluk["2025-10-01"].enCok} üretildi.`;
+  else cevap = "Tam anlayamadım, acaba hangi gün veya hangi ürün hakkında bilgi almak istiyorsun?";
 
-            // Tabloyu göster ve sadece ilgili firmayı listele
-            tbody.innerHTML = '';
-            const tr = document.createElement('tr');
+  document.getElementById("output").innerText = cevap;
+  cevapVer(cevap);
+}
 
-            const tdFirma = document.createElement('td');
-            tdFirma.textContent = firmaData.firma;
-
-            const tdUretim = document.createElement('td');
-            tdUretim.textContent = formatNumber(firmaData.uretim);
-
-            const tdHammadde = document.createElement('td');
-            tdHammadde.textContent = formatNumber(firmaData.hammadde);
-
-            tr.appendChild(tdFirma);
-            tr.appendChild(tdUretim);
-            tr.appendChild(tdHammadde);
-
-            tbody.appendChild(tr);
-            table.style.display = 'table';
-        }
-    </script>
+document.getElementById("mic").onclick = function(){
+  const rec = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+  rec.lang = "tr-TR";
+  rec.start();
+  document.getElementById("transcript").innerText = "🎙️ Dinliyorum...";
+  rec.onresult = function(e){
+    const text = e.results[0][0].transcript;
+    document.getElementById("transcript").innerText = "🗣️ " + text;
+    analizEt(text);
+  };
+  rec.onerror = function(){
+    document.getElementById("transcript").innerText = "❌ Mikrofon hatası. Lütfen yeniden deneyin.";
+  };
+};
+</script>
 </body>
 </html>
