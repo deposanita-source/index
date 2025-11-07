@@ -1,137 +1,170 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Sanita Sesli Analiz Robotu AI</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(120deg, #dfe9f3, #ffffff);
-      color: #222;
-      text-align: center;
-      padding: 30px;
-    }
-    h1 {
-      color: #0077cc;
-      font-size: 28px;
-    }
-    #log {
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      padding: 20px;
-      width: 80%;
-      margin: 20px auto;
-      text-align: left;
-      min-height: 150px;
-    }
-    button {
-      background-color: #0077cc;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      margin: 10px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover { background-color: #005fa3; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sanita Sesli Analiz Robotu AI</title>
+<style>
+  body {
+    background: radial-gradient(circle, #0d1b2a, #1b263b);
+    color: white;
+    font-family: "Segoe UI", sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  h1 {
+    color: #00d9ff;
+    font-weight: 600;
+  }
+  #mic {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #00b4d8, #0077b6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 30px auto;
+    cursor: pointer;
+    box-shadow: 0 0 20px #00d9ff;
+    transition: all 0.3s ease;
+  }
+  #mic:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 40px #00e0ff;
+  }
+  .wave {
+    width: 100%;
+    height: 6px;
+    background: #00d9ff;
+    margin: 10px auto;
+    border-radius: 5px;
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse {
+    0% {opacity: 0.3;}
+    50% {opacity: 1;}
+    100% {opacity: 0.3;}
+  }
+  #output, #transcript {
+    margin-top: 20px;
+    font-size: 18px;
+  }
+  #examples {
+    margin-top: 25px;
+    font-size: 16px;
+    color: #90e0ef;
+  }
+  button {
+    background: #0077b6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    margin-top: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  button:hover {
+    background: #00b4d8;
+  }
+</style>
 </head>
 <body>
-  <h1>🔹 Sanita Sesli Analiz Robotu (MikroFost Tolga)</h1>
-  <p>Üretim verilerinizi analiz eder, 1-31 Ekim arası verileri yorumlar ve sesli yanıt verir.</p>
+  <h1>?? Sanita Sesli Analiz Robotu AI</h1>
+  <div id="mic">??</div>
+  <div class="wave"></div>
+  <p id="transcript">Konuşmak için mikrofona dokun.</p>
+  <div id="output"></div>
 
-  <div>
-    <button onclick="startListening()">🎤 Sor</button>
-    <button onclick="stopListening()">⏹ Durdur</button>
+  <div id="examples">
+    ?? Örnek sorular:<br>
+    ?? 1 Ekim’de kaç firma üretim yaptı?<br>
+    ?? Pul biberden kaç kilo kullanıldı?<br>
+    ?? Kaç kişi çalıştı?<br>
+    ?? Toplam üretim miktarı ne kadar?<br>
+    ?? En çok hangi hammadde kullanıldı?<br>
   </div>
 
-  <div id="log"></div>
-
-  <script>
-    // === Yapay zekâ analiz verileri (örnek + modelleme) ===
-    const veriler = [
-      { tarih: "2025-10-01", firma: "BİM", urun: "Pul Biber", miktar: 1200, hammadde: "Kırmızı Biber", hammaddeMiktar: 540 },
-      { tarih: "2025-10-01", firma: "ŞOK", urun: "Karabiber", miktar: 900, hammadde: "Karabiber", hammaddeMiktar: 400 },
-      { tarih: "2025-10-02", firma: "A101", urun: "Pul Biber", miktar: 989, hammadde: "Kırmızı Biber", hammaddeMiktar: 512 },
-      { tarih: "2025-10-03", firma: "MİGROS", urun: "Kekik", miktar: 600, hammadde: "Kekik", hammaddeMiktar: 300 },
-      { tarih: "2025-10-04", firma: "CARREFOUR", urun: "Pul Biber", miktar: 300, hammadde: "Kırmızı Biber", hammaddeMiktar: 145 },
-      { tarih: "2025-10-05", firma: "METRO", urun: "Nane", miktar: 100, hammadde: "Nane", hammaddeMiktar: 70 },
-      { tarih: "2025-10-05", firma: "ŞOK", urun: "Kekik", miktar: 150, hammadde: "Kekik", hammaddeMiktar: 90 },
-      { tarih: "2025-10-06", firma: "BİM", urun: "Pul Biber", miktar: 450, hammadde: "Kırmızı Biber", hammaddeMiktar: 220 },
-      { tarih: "2025-10-31", firma: "A101", urun: "Nane", miktar: 300, hammadde: "Nane", hammaddeMiktar: 140 }
-    ];
-
-    // === Yardımcı fonksiyonlar ===
-    const log = document.getElementById("log");
-    function speak(text) {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = "tr-TR";
-      utter.pitch = 1;
-      utter.rate = 1;
-      utter.volume = 1;
-      utter.voice = speechSynthesis.getVoices().find(v => v.name.includes("Tolga")) || null;
-      speechSynthesis.speak(utter);
+<script>
+const veri = {
+  aylik: {
+    kisi: 418,
+    calisma_saat: 951.75,
+    uretim_adet: 212571,
+    toplam_hammadde: 99126.68,
+    fire: { hammadde: 5.48, omk: 28, opp: 15.8 },
+  },
+  firmalar: {
+    "SOFRA": { uretim: 31477, hammadde: 29055.17 },
+    "EVERGREEN": { uretim: 48122, hammadde: 9921.44 },
+    "MESA": { uretim: 70990, hammadde: 9804.16 },
+    "CASH&CARRY": { uretim: 13522, hammadde: 15307.8 },
+    "RECEP CAN": { uretim: 1952, hammadde: 4760.07 },
+  },
+  hammaddeler: {
+    "PULBİBER": 20107.24,
+    "KİMYON": 4475.46,
+    "TOZ BİBER": 14818.43,
+    "LİMON TUZU": 9441.8,
+    "GALETA UNU": 8770.1,
+  },
+  gunluk: {
+    "2025-10-01": {
+      firmalar: 6,
+      urunCesidi: 8,
+      uretimAdet: 3089,
+      hammaddeKg: 5412,
+      enCok: "Pul biber"
     }
+  }
+};
 
-    function yazdir(metin) {
-      log.innerHTML += `<p>🟢 ${metin}</p>`;
-    }
+function sayiyiYaziya(sayi){
+  return Math.round(sayi).toLocaleString("tr-TR").replace(/\./g, " ");
+}
 
-    // === Doğal dil sorgu analizleri ===
-    function analizEt(soru) {
-      soru = soru.toLowerCase();
-      if (soru.includes("1 ekim")) {
-        const gun = veriler.filter(v => v.tarih === "2025-10-01");
-        const toplamUretim = gun.reduce((a,b)=>a+b.miktar,0);
-        const toplamHammadde = gun.reduce((a,b)=>a+b.hammaddeMiktar,0);
-        const firmaSayisi = new Set(gun.map(v=>v.firma)).size;
-        const urunCesidi = new Set(gun.map(v=>v.urun)).size;
-        const metin = `1 Ekim 2025 tarihinde ${firmaSayisi} firmaya üretim yapıldı. Toplam ${urunCesidi} ürün çeşidinde ${toplamUretim} adet üretim ve ${toplamHammadde} kilogram hammadde kullanıldı. En çok Pul Biber üretildi.`;
-        yazdir(metin); speak(metin);
-      }
-      else if (soru.includes("ekim")) {
-        const ekimVeri = veriler.filter(v=>v.tarih.startsWith("2025-10"));
-        const toplamUretim = ekimVeri.reduce((a,b)=>a+b.miktar,0);
-        const toplamHammadde = ekimVeri.reduce((a,b)=>a+b.hammaddeMiktar,0);
-        const firmaSayisi = new Set(ekimVeri.map(v=>v.firma)).size;
-        const urunCesidi = new Set(ekimVeri.map(v=>v.urun)).size;
-        const metin = `Ekim ayı boyunca ${firmaSayisi} firmaya üretim yapıldı. ${urunCesidi} çeşit ürün toplam ${toplamUretim} adet üretildi ve ${toplamHammadde} kilogram hammadde kullanıldı. En çok Pul Biber üretildi.`;
-        yazdir(metin); speak(metin);
-      }
-      else if (soru.includes("merhaba") || soru.includes("selam") || soru.includes("nasılsın")) {
-        const metin = "Merhaba! Ben Sanita sesli analiz robotu Tolga. Bugün üretim analizlerine bakmak ister misin?";
-        yazdir(metin); speak(metin);
-      }
-      else {
-        const metin = "Sorunu tam anlayamadım, lütfen tarihi veya firmayı belirterek tekrar söyler misin?";
-        yazdir(metin); speak(metin);
-      }
-    }
+function cevapVer(metin) {
+  const synth = window.speechSynthesis;
+  const ses = new SpeechSynthesisUtterance(metin);
+  ses.lang = "tr-TR";
+  ses.pitch = 1;
+  ses.rate = 1;
+  ses.voice = synth.getVoices().find(v => v.name.toLowerCase().includes("male") || v.name.toLowerCase().includes("erkek")) || null;
+  synth.speak(ses);
+}
 
-    // === Sesli dinleme ===
-    let recognition;
-    function startListening() {
-      if (!('webkitSpeechRecognition' in window)) {
-        alert("Tarayıcın ses tanımayı desteklemiyor.");
-        return;
-      }
-      recognition = new webkitSpeechRecognition();
-      recognition.lang = "tr-TR";
-      recognition.onresult = function(event) {
-        const text = event.results[0][0].transcript;
-        yazdir(`❓ ${text}`);
-        analizEt(text);
-      };
-      recognition.start();
-      yazdir("🎧 Dinliyorum...");
-    }
+function analizEt(soru) {
+  soru = soru.toLowerCase();
+  let cevap = "";
 
-    function stopListening() {
-      if (recognition) recognition.stop();
-      yazdir("⏹ Dinleme durduruldu.");
-    }
-  </script>
+  if(soru.includes("merhaba")) cevap = "Merhaba! Nasılsın?";
+  else if(soru.includes("nasılsın")) cevap = "Harikayım! Sen nasılsın?";
+  else if(soru.includes("kaç kişi")) cevap = `Toplam ${sayiyiYaziya(veri.aylik.kisi)} kişi çalıştı.`;
+  else if(soru.includes("toplam üretim")) cevap = `Toplam üretim ${sayiyiYaziya(veri.aylik.uretim_adet)} adet olarak gerçekleşti.`;
+  else if(soru.includes("pul biber")) cevap = `Pul biberden toplam ${sayiyiYaziya(veri.hammaddeler["PULBİBER"])} kilogram kullanıldı.`;
+  else if(soru.includes("en çok")) cevap = "Ay boyunca en çok Pul biber kullanıldı.";
+  else if(soru.includes("1 ekim")) cevap = `1 Ekim 2025 tarihinde ${veri.gunluk["2025-10-01"].firmalar} firma üretim yaptı, ${veri.gunluk["2025-10-01"].urunCesidi} çeşit ürün üretildi, toplam ${sayiyiYaziya(veri.gunluk["2025-10-01"].uretimAdet)} adet üretim yapıldı ve ${sayiyiYaziya(veri.gunluk["2025-10-01"].hammaddeKg)} kilogram hammadde kullanıldı. En çok ${veri.gunluk["2025-10-01"].enCok} üretildi.`;
+  else cevap = "Tam anlayamadım, acaba hangi gün veya hangi ürün hakkında bilgi almak istiyorsun?";
+
+  document.getElementById("output").innerText = cevap;
+  cevapVer(cevap);
+}
+
+document.getElementById("mic").onclick = function(){
+  const rec = new(window.SpeechRecognition || window.webkitSpeechRecognition)();
+  rec.lang = "tr-TR";
+  rec.start();
+  document.getElementById("transcript").innerText = "??? Dinliyorum...";
+  rec.onresult = function(e){
+    const text = e.results[0][0].transcript;
+    document.getElementById("transcript").innerText = "??? " + text;
+    analizEt(text);
+  };
+  rec.onerror = function(){
+    document.getElementById("transcript").innerText = "? Mikrofon hatası. Lütfen yeniden deneyin.";
+  };
+};
+</script>
 </body>
 </html>
