@@ -4,248 +4,100 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Sanita — Mobil AI Asistan (Güncel Hammaddeler)</title>
+<title>Sanita — Güncel Veri ile AI Asistan</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
-  :root{
-    --bg1:#00121a; --bg2:#021428; --neon:#00f5d4; --neon2:#00b4d8; --glass:rgba(255,255,255,0.03);
-    --muted:rgba(255,255,255,0.75);
-  }
+  :root{--bg1:#00121a;--bg2:#021428;--neon:#00f5d4;--neon2:#00b4d8;--muted:rgba(255,255,255,0.75)}
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Poppins,system-ui,Segoe UI,Arial;background:radial-gradient(800px 400px at 10% 10%, rgba(0,20,30,0.6), transparent), linear-gradient(180deg,var(--bg1),var(--bg2));color:white;-webkit-font-smoothing:antialiased;}
-  .app{max-width:460px;margin:0 auto;padding:14px;min-height:100vh;display:flex;flex-direction:column;gap:12px;position:relative;z-index:2;}
-  /* animated background */
-  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-  .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.14;mix-blend-mode:screen}
-  .orb.o1{width:820px;height:820px;left:-20%;top:-30%;background:linear-gradient(90deg,#003a6b,#005f8a)}
-  .orb.o2{width:600px;height:600px;right:-10%;bottom:-10%;background:linear-gradient(90deg,#002b59,#004e73);opacity:0.12}
-  header{display:flex;align-items:center;gap:12px;z-index:2}
-  .logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--neon2),var(--neon));display:grid;place-items:center;color:#012;font-weight:700;box-shadow:0 8px 40px rgba(0,245,212,0.08)}
-  h1{margin:0;font-size:1.05rem;color:var(--neon);text-shadow:0 0 14px rgba(0,245,212,0.08)}
-  .subtitle{font-size:0.85rem;color:var(--muted);margin-top:4px}
-  /* main chat area */
+  html,body{height:100%;margin:0;font-family:Poppins,system-ui,Segoe UI,Arial;background:radial-gradient(800px 400px at 10% 10%, rgba(0,20,30,0.6), transparent), linear-gradient(180deg,var(--bg1),var(--bg2));color:white;-webkit-font-smoothing:antialiased}
+  .app{max-width:460px;margin:0 auto;padding:14px;min-height:100vh;display:flex;flex-direction:column;gap:12px;position:relative;z-index:2}
   .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:14px;padding:12px;box-shadow:0 10px 40px rgba(0,0,0,0.35);}
   .transcript{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);overflow:hidden}
   .pulse{width:12px;height:12px;border-radius:4px;background:linear-gradient(180deg,var(--neon),var(--neon2));box-shadow:0 10px 28px rgba(0,200,170,0.09);flex:0 0 12px}
   .flow{white-space:nowrap;display:block;overflow:hidden;flex:1}
-  .flow .txt{display:inline-block;padding-left:100%;animation:flowText 10s linear infinite}
-  @keyframes flowText{0%{transform:translateX(0)}50%{transform:translateX(-40%)}100%{transform:translateX(0)}}
+  .flow .txt{display:inline-block;padding-left:0;animation:none}
   .bubbles{display:flex;flex-direction:column;gap:10px;max-height:56vh;overflow:auto;padding:6px;margin-top:8px}
   .bubble{max-width:84%;padding:12px 14px;border-radius:14px;display:inline-block;position:relative;word-break:break-word;box-shadow:0 6px 30px rgba(1,10,20,0.4);animation:pop .28s ease both}
-  @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
   .bubble.user{background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01));align-self:flex-end;border-bottom-right-radius:6px}
   .bubble.ai{background:linear-gradient(90deg, rgba(0,245,212,0.08), rgba(0,180,216,0.03));align-self:flex-start;border-bottom-left-radius:6px;color:#012}
-  .bubble .emoji{margin-right:8px;font-size:18px;display:inline-block;vertical-align:middle}
-  .meta{margin-top:8px;font-size:11px;color:rgba(0,0,0,0.35);font-weight:700;padding-top:6px}
-  /* mic row */
+  .emoji{margin-right:8px;font-size:18px;display:inline-block;vertical-align:middle}
   .mic-row{display:flex;align-items:center;gap:12px;justify-content:center;margin-top:6px}
   .mic{width:92px;height:92px;border-radius:999px;background:linear-gradient(145deg,var(--neon),var(--neon2));display:grid;place-items:center;font-size:36px;cursor:pointer;border:2px solid rgba(255,255,255,0.06);box-shadow:0 14px 48px rgba(0,180,216,0.12)}
-  .mic.record{transform:scale(1.04);box-shadow:0 20px 80px rgba(0,245,212,0.16);animation:micGlow 1.2s infinite alternate}
-  @keyframes micGlow{from{filter:drop-shadow(0 0 6px rgba(0,245,212,0.08))}to{filter:drop-shadow(0 0 28px rgba(0,180,216,0.18))}}
-  .controls{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:6px}
   .btn{padding:8px 12px;border-radius:10px;background:linear-gradient(90deg,rgba(255,255,255,0.03),transparent);border:1px solid rgba(255,255,255,0.04);color:var(--muted);font-weight:700}
-  /* categories */
-  .cats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-  @media(max-width:420px){.cats{grid-template-columns:1fr}}
-  .cat{padding:10px;border-radius:10px;background:linear-gradient(90deg,rgba(255,255,255,0.02),transparent);border:1px solid rgba(255,255,255,0.04);cursor:pointer}
-  .cat .title{font-weight:700;color:var(--neon);display:flex;align-items:center;gap:8px}
-  .qs{margin-top:8px;display:flex;flex-direction:column;gap:8px;max-height:0;overflow:hidden;transition:max-height .36s ease}
-  .qs.open{max-height:240px;padding-right:6px}
-  .qitem{padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);font-weight:700;color:var(--muted);display:flex;gap:8px;align-items:center;border:1px solid rgba(255,255,255,0.02)}
-  .qitem:hover{background:linear-gradient(90deg, rgba(0,245,212,0.03), rgba(0,180,216,0.02));color:var(--neon)}
   footer{display:flex;align-items:center;justify-content:center;padding:10px;margin-top:6px}
   .copyright{padding:6px 12px;border-radius:10px;background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent);box-shadow:0 6px 24px rgba(0,0,0,0.3);font-weight:700;color:var(--neon);font-size:13px}
 </style>
 </head>
 <body>
-<div class="bg" aria-hidden>
-  <div class="orb o1"></div>
-  <div class="orb o2"></div>
-</div>
-
 <div class="app" role="application" aria-label="Sanita Mobil AI">
-  <header>
-    <div style="display:flex;gap:10px;align-items:center">
-      <div class="logo">ST</div>
-      <div>
-        <h1>Sanita — Yapay Zeka Bilgi Asistanıyım</h1>
-        <div class="subtitle">Dilediğini sorabilirsin.</div>
-      </div>
+  <header style="display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--neon2),var(--neon));display:grid;place-items:center;font-weight:700;color:#012">ST</div>
+      <div><div style="font-size:1.05rem;color:var(--neon);font-weight:700">Sanita — Yapay Zeka Bilgi Asistanı</div><div style="font-size:0.85rem;color:var(--muted)">Dilediğini sorabilirsin.</div></div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <select id="voiceSelect" aria-label="Ses seçimi"><option value="best">🎤 En iyi</option><option value="female">👩 Kadın</option><option value="male">👨 Erkek</option></select>
-      <button id="download" class="btn">⬇️ İndir</button>
-    </div>
+    <div style="display:flex;gap:8px;align-items:center"><select id="voiceSelect" class="btn"><option value="female">👩 Kadın (önerilen)</option><option value="male">👨 Erkek</option></select><button id="download" class="btn">⬇️ İndir</button></div>
   </header>
 
   <main class="card" role="main">
-    <!-- flowing transcript -->
     <div class="transcript" aria-live="polite">
       <div class="pulse" aria-hidden></div>
-      <div class="flow"><span class="txt" id="flowText">Merhaba ben Sanita Yapay Zeka Bilgi Asistanıyım. Dilediğini sorabilirsin. Sesli komut için mikrofona dokunabilir veya kategorilerden bir soru seçebilirsin.</span></div>
+      <div class="flow"><span class="txt" id="flowText">Merhaba ben Sanita Yapay Zeka Bilgi Asistanıyım. Dilediğini sorabilirsin. Sesli komut için mikrofon düğmesine dokunabilir veya örnek sorulardan birini seçebilirsin.</span></div>
     </div>
 
-    <!-- bubbles -->
-    <div class="bubbles" id="bubbles" aria-live="polite" aria-atomic="false"></div>
+    <div class="bubbles" id="bubbles" aria-live="polite"></div>
 
-    <!-- mic and controls -->
-    <div class="mic-row">
-      <div id="mic" class="mic" title="Mikrofonu başlat">🎤</div>
-    </div>
+    <div class="mic-row"><div id="mic" class="mic" title="Mikrofonu başlat">🎤</div></div>
 
-    <div class="controls" aria-hidden>
-      <button id="clear" class="btn">🧹 Temizle</button>
-      <div style="flex:1;text-align:center;color:var(--muted);font-weight:700">Konuşma baloncuklarında cevaplar görünür.</div>
-    </div>
-
-    <!-- categories -->
-    <div class="cats" id="cats">
-      <div class="cat" data-cat="personel">
-        <div class="title">👥 Personel</div>
-        <div class="qs" id="qs-personel">
-          <div class="qitem" data-q="kaç kişi çalıştı bu ay?">👷 Kaç kişi çalıştı bu ay?</div>
-          <div class="qitem" data-q="toplam çalışma süresi kaç saattir?">⏱ Toplam çalışma süresi kaç saattir?</div>
-          <div class="qitem" data-q="kişi başına ortalama üretim ne kadar?">📊 Kişi başına ortalama üretim ne kadar?</div>
-        </div>
-      </div>
-
-      <div class="cat" data-cat="uretim">
-        <div class="title">🏭 Üretim</div>
-        <div class="qs" id="qs-uretim">
-          <div class="qitem" data-q="toplam üretim miktarı nedir?">📦 Toplam üretim miktarı nedir?</div>
-          <div class="qitem" data-q="ortalama saatlik üretim kaç adettir?">⚙ Ortalama saatlik üretim kaç adettir?</div>
-          <div class="qitem" data-q="1 adet için ortalama hammadde tüketimi nedir?">📈 1 adet için ortalama hammadde tüketimi nedir?</div>
-        </div>
-      </div>
-
-      <div class="cat" data-cat="hammadde">
-        <div class="title">🧂 Hammadde</div>
-        <div class="qs" id="qs-hammadde">
-          <div class="qitem" data-q="pul biberinden kaç kilo kullanıldı?">🌶 Pul biberinden kaç kilo kullanıldı?</div>
-          <div class="qitem" data-q="toplam kullanılan hammadde miktarı nedir?">🥣 Toplam kullanılan hammadde miktarı nedir?</div>
-          <div class="qitem" data-q="en çok hangi hammadde kullanıldı?">🔎 En çok hangi hammadde kullanıldı?</div>
-        </div>
-      </div>
-
-      <div class="cat" data-cat="firma">
-        <div class="title">🏢 Firma</div>
-        <div class="qs" id="qs-firma">
-          <div class="qitem" data-q="sofra firmasının üretim miktarı nedir?">🏷️ SOFRA firmasının üretim miktarı nedir?</div>
-          <div class="qitem" data-q="mesa firmasının kullandığı toplam hammadde kaç kg?">🌾 MESA firmasının kullandığı toplam hammadde kaç kg?</div>
-          <div class="qitem" data-q="en fazla üretim yapan firma hangisidir?">🔎 En fazla üretim yapan firma hangisidir?</div>
-        </div>
-      </div>
-
-      <div class="cat" data-cat="fire">
-        <div class="title">🔥 Fire</div>
-        <div class="qs" id="qs-fire">
-          <div class="qitem" data-q="toplam hammadde fire miktarı kaç kg?">⚠️ Toplam hammadde fire miktarı kaç kg?</div>
-          <div class="qitem" data-q="omk ve opp fire toplamı nedir?">🧾 OMK ve OPP fire toplamı nedir?</div>
-          <div class="qitem" data-q="fire oranı toplam hammaddeye göre yüzde kaç?">📉 Fire oranı toplam hammaddeye göre yüzde kaç?</div>
-        </div>
-      </div>
-
-      <div class="cat" data-cat="ozet">
-        <div class="title">📅 Özet</div>
-        <div class="qs" id="qs-ozet">
-          <div class="qitem" data-q="aylık toplam hammadde kaç kg olarak kaydedilmiş?">🗓 Aylık toplam hammadde kaç kg olarak kaydedilmiş?</div>
-          <div class="qitem" data-q="genel toplam üretim 211.991 adet midir?">📊 Genel toplam üretim 211.991 adet midir?</div>
-          <div class="qitem" data-q="veri setine göre en verimli üç firma hangileridir?">✅ Veri setine göre en verimli üç firma hangileridir?</div>
-        </div>
-      </div>
-    </div>
-
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:8px"><button id="clear" class="btn">🧹 Temizle</button></div>
   </main>
 
   <footer><div class="copyright">© 2025 Yapay Zeka Geliştiricisi: Bilal Tektaş 🤖</div></footer>
 </div>
 
 <script>
-// ==== New embedded hammaddeler data from user image/table ====
+// --- Embedded data: updated firm production and hammadde totals ---
 const HAMMADDELER = {
-  "ÇAM FISTIĞI":160.00,"YENİBAHAR":920.05,"PULBİBER":20107.24,"TÜM BİBER":299.00,"DEFNE YAPRAĞI":204.46,
-  "KEKİK":2552.74,"İSOT":4130.77,"ANASON":559.52,"HİNDİSTAN CEVİZİ":4154.01,"IHLAMUR":102.00,"MAVİ HAŞHAŞ":260.00,
-  "ÇEŞNİ MILD SEASONING":120.00,"VANİLİN ŞEKERLİ":310.00,"SUMAK":1666.49,"BİBERİYE":1436.54,"MİX MARINATION":120.00,
-  "TUZOT":120.00,"TARÇIN":2763.43,"KİMYON":4475.46,"KÖRİ":1670.06,"LİMON TUZU":9441.80,"KARABİBER":3020.10,
-  "TOZ BİBER":14818.43,"NİŞASTA BUĞDAY":100.00,"MAHLEP":38.80,"KARBONAT":342.00,"ÇÖREKOTU":30.00,"GALETA UNU":8770.10,
-  "KUŞ ÜZÜMÜ":1620.00,"BEYAZ HAŞHAŞ":10.00,"SARIMSAK":971.80,"NİŞASTA MISIR":500.00,"ZERDEÇAL":743.00,"PİZZA SPİCE MİX":25.20,
-  "KEBAP SPICE MİX":19.20,"NANE":3869.95,"MAYDANOZ":496.80,"CHİCKEN SEASONING MİX":19.20,"SPİCE MIX":19.20,"BAHARAT KARIŞIMI":26.88,
-  "FESLEĞEN":534.90,"SUSAM":2721.90,"ZENCEFİL":196.10,"KİŞNİŞ":55.68,"DEREOTU":26.06,"SOĞAN":20.00,"BAMYA KURUSU":5.00,
-  "YER FISTIĞI":60.10,"SHAWARMA ÇEŞNİSİ":13.50,"MASALA ÇEŞNİSİ":12.00,"DENİZ ÜRÜNLERİ ÇEŞNİSİ":13.50,"YEMEKLİK TUZ":30.00,
-  "TAVUK ÇEŞNİSİ":10.50,"BARBEKÜ ÇEŞNİSİ":15.00,"ET ÇEŞNİSİ":15.00,"MISIR UNU":1850.30,"HİMALAYA TUZU":1033.20,"KAJUN ÇEŞNİSİ":12.00,
-  "MİX 7 TÜRLÜ":215.20,"DENİZ TUZU":390.72,"MUSKAT":98.40,"SALATA ÇEŞNİ":8.10,"PATATES ÇEŞNİ":18.00,"MAKARNA ÇEŞNİ":8.10,
-  "KABARTMA TOZU":10.00,"KAYA TUZU":288.00,"BALIK MİX":43.20,"PİRİNÇ UNU":100.00,"SOS BAHARATI":50.00,"BUĞDAY NİŞASTA":100.00,
-  "AKBİBER":20.00
+"ÇAM FISTIĞI":160.00,"YENİBAHAR":920.05,"PULBİBER":20107.24,"TÜM BİBER":299.00,"DEFNE YAPRAĞI":204.46,
+"KEKİK":2552.74,"İSOT":4130.77,"ANASON":559.52,"HİNDİSTAN CEVİZİ":4154.01,"IHLAMUR":102.00,"MAVİ HAŞHAŞ":260.00,
+"ÇEŞNİ MILD SEASONING":120.00,"VANİLİN ŞEKERLİ":310.00,"SUMAK":1666.49,"BİBERİYE":1436.54,"MİX MARINATION":120.00,
+"TUZOT":120.00,"TARÇIN":2763.43,"KİMYON":4475.46,"KÖRİ":1670.06,"LİMON TUZU":9441.80,"KARABİBER":3020.10,
+"TOZ BİBER":14818.43,"NİŞASTA BUĞDAY":100.00,"MAHLEP":38.80,"KARBONAT":342.00,"ÇÖREKOTU":30.00,"GALETA UNU":8770.10,
+"KUŞ ÜZÜMÜ":1620.00,"BEYAZ HAŞHAŞ":10.00,"SARIMSAK":971.80,"NİŞASTA MISIR":500.00,"ZERDEÇAL":743.00,"PİZZA SPİCE MİX":25.20,
+"KEBAP SPICE MİX":19.20,"NANE":3869.95,"MAYDANOZ":496.80,"CHİCKEN SEASONING MİX":19.20,"SPİCE MIX":19.20,"BAHARAT KARIŞIMI":26.88,
+"FESLEĞEN":534.90,"SUSAM":2721.90,"ZENCEFİL":196.10,"KİŞNİŞ":55.68,"DEREOTU":26.06,"SOĞAN":20.00,"BAMYA KURUSU":5.00,
+"YER FISTIĞI":60.10,"SHAWARMA ÇEŞNİSİ":13.50,"MASALA ÇEŞNİSİ":12.00,"DENİZ ÜRÜNLERİ ÇEŞNİSİ":13.50,"YEMEKLİK TUZ":30.00,
+"TAVUK ÇEŞNİSİ":10.50,"BARBEKÜ ÇEŞNİSİ":15.00,"ET ÇEŞNİSİ":15.00,"MISIR UNU":1850.30,"HİMALAYA TUZU":1033.20,"KAJUN ÇEŞNİSİ":12.00,
+"MİX 7 TÜRLÜ":215.20,"DENİZ TUZU":390.72,"MUSKAT":98.40,"SALATA ÇEŞNİ":8.10,"PATATES ÇEŞNİ":18.00,"MAKARNA ÇEŞNİ":8.10,
+"KABARTMA TOZU":10.00,"KAYA TUZU":288.00,"BALIK MİX":43.20,"PİRİNÇ UNU":100.00,"SOS BAHARATI":50.00,"BUĞDAY NİŞASTA":100.00,
+"AKBİBER":20.00
 };
 
-// Existing DATA (monthly + firms)
 const DATA = {
   aylik:{kisi:418.00, calisma_saat:951.75, uretim_adet:211991.00, toplam_hammadde:99126.68, hammadde_fire:5.48, omk_fire:28.00, opp_fire:15.80},
   firmalar:{
-    "SOFRA":{uret:31477,hammadde:29055.17},"KERVAN":{uret:764,hammadde:764.00},"RECEP CAN":{uret:1952,hammadde:4760.07},
-    "EVERGREEN":{uret:48122,hammadde:9921.44},"BEDİR TEDARİK":{uret:1964,hammadde:1702.30},"ÖNEN GIDA":{uret:100,hammadde:100.00},
-    "ÇELİK NATUREL":{uret:100,hammadde:100.00},"ŞEKERCİ":{uret:10484,hammadde:11828.14},"GENİM GIDA":{uret:5173,hammadde:4760.51},
-    "AKAR FOOD":{uret:11454,hammadde:1170.48},"MAUN GIDA":{uret:550,hammadde:550.00},"VENÜS":{uret:3660,hammadde:2579.00},
-    "ANADOLU ÜNİVERSİTESİ":{uret:340,hammadde:310.00},"EKOL FOOD":{uret:864,hammadde:723.00},"SANITA EVERGREEN":{uret:672,hammadde:336.00},
-    "MESA":{uret:70990,hammadde:9804.16},"CASH&CARRY":{uret:13522,hammadde:15307.80},"BORTAR":{uret:797,hammadde:703.50},
-    "VKS":{uret:1794,hammadde:1002.00},"HABİP ALBAYRAK":{uret:1086,hammadde:1008.15},"FATSAT":{uret:320,hammadde:320.00},
-    "NIOLES":{uret:750,hammadde:340.65},"SALEH":{uret:4224,hammadde:1024.32},"KIRÇİÇEĞİ":{uret:50,hammadde:50.00},
-    "MAYA CATERİNG":{uret:42,hammadde:36.00},"T DÖNER":{uret:500,hammadde:50.00},"FRESH FOOD":{uret:50,hammadde:50.00},
-    "EGES YEMEK":{uret:190,hammadde:190.00},"_GENEL_TOPLAM_FIRMA_HAMMADDE":98546.68
+"SOFRA":{uret:31477,hammadde:29055.165},"KERVAN":{uret:764,hammadde:764.003},"RECEP CAN":{uret:1952,hammadde:4760.07},
+"EVERGREEN":{uret:48122,hammadde:9921.439},"BEDİR TEDARİK":{uret:1964,hammadde:1702.3},"ÖNEN GIDA":{uret:100,hammadde:100},
+"ÇELİK NATUREL":{uret:100,hammadde:100},"ŞEKERCİ":{uret:10484,hammadde:11828.135},"GENİM GIDA":{uret:5173,hammadde:4760.51},
+"AKAR FOOD":{uret:11454,hammadde:1170.48},"MAUN GIDA":{uret:550,hammadde:550},"VENÜS":{uret:3660,hammadde:2579},
+"ANADOLU ÜNİVERSİTESİ":{uret:340,hammadde:310},"EKOL FOOD":{uret:864,hammadde:723},"SANITA EVERGREEN":{uret:672,hammadde:336},
+"MESA":{uret:70990,hammadde:9804.155},"CASH&CARRY":{uret:13522,hammadde:15307.8},"BORTAR":{uret:797,hammadde:703.5},
+"VKS":{uret:1794,hammadde:1002},"HABİP ALBAYRAK":{uret:1086,hammadde:1008.15},"FATSAT":{uret:320,hammadde:320},
+"NIOLES":{uret:750,hammadde:340.65},"SALEH":{uret:4224,hammadde:1024.32},"KIRÇİÇEĞİ":{uret:50,hammadde:50},
+"MAYA CATERİNG":{uret:42,hammadde:36},"T DÖNER":{uret:500,hammadde:50},"FRESH FOOD":{uret:50,hammadde:50},
+"EGES YEMEK":{uret:190,hammadde:190},"_GENEL_TOPLAM_FIRMA_HAMMADDE":98546.68
   }
 };
 
-// helpers
 function fmt(n){ return (typeof n==='number')? n.toLocaleString('tr-TR') : n; }
-function maxHammadde(){
-  const entries = Object.entries(HAMMADDELER);
-  let max = entries[0];
-  for(const e of entries){ if(e[1] > max[1]) max = e; }
-  return max; // [name, value]
-}
+function appendBubble(txt, who='ai', emoji='🤖'){ const bubbles=document.getElementById('bubbles'); const el=document.createElement('div'); el.className='bubble '+(who==='user'?'user':'ai'); el.innerHTML=`<span class="emoji">${emoji}</span><span class="txt">${txt}</span>`; bubbles.appendChild(el); bubbles.scrollTop=bubbles.scrollHeight; return el; }
+function speak(text){ try{ const u=new SpeechSynthesisUtterance(text); u.lang='tr-TR'; u.rate=1; u.pitch=1; const pref=document.getElementById('voiceSelect').value; const voices=speechSynthesis.getVoices(); let candidate=voices.find(v=>/tr-?tr|turkish/i.test(v.lang))||voices.find(v=>/female|kadın/i.test(v.name))||voices[0]||null; if(pref==='male') candidate=voices.find(v=>/male|erkek/i.test(v.name))||candidate; if(pref==='female') candidate=voices.find(v=>/female|kadın/i.test(v.name))||candidate; if(candidate) u.voice=candidate; speechSynthesis.cancel(); speechSynthesis.speak(u);}catch(e){console.warn(e)} }
+function maxHammadde(){ const entries=Object.entries(HAMMADDELER); let max=entries[0]; for(const e of entries){ if(e[1]>max[1]) max=e; } return max; }
+function enYuksek(key){ return Object.entries(DATA.firmalar).filter(([k])=>!k.startsWith('_')).map(([k,v])=>({firma:k,val:v[key]})).sort((a,b)=>b.val-a.val); }
 
-// append bubble
-function appendBubble(txt, who='ai', emoji='🤖'){
-  const bubbles = document.getElementById('bubbles');
-  const el = document.createElement('div'); el.className = 'bubble '+(who==='user'?'user':'ai');
-  el.innerHTML = `<span class="emoji">${emoji}</span><span class="txt">${txt}</span>`;
-  bubbles.appendChild(el); bubbles.scrollTop = bubbles.scrollHeight;
-  return el;
-}
-
-// speak (choose best available voice)
-function speak(text){
-  try{
-    const u = new SpeechSynthesisUtterance(text); u.lang='tr-TR'; u.rate=1; u.pitch=1;
-    const pref = document.getElementById('voiceSelect').value;
-    const voices = speechSynthesis.getVoices();
-    let candidate = voices.find(v=>/tr-?tr|turkish/i.test(v.lang)) || voices.find(v=>/female|kadın/i.test(v.name)) || voices[0] || null;
-    if(pref==='male') candidate = voices.find(v=>/male|erkek/i.test(v.name)) || candidate;
-    if(pref==='female') candidate = voices.find(v=>/female|kadın/i.test(v.name)) || candidate;
-    if(candidate) u.voice = candidate;
-    speechSynthesis.cancel(); speechSynthesis.speak(u);
-  }catch(e){console.warn(e)}
-}
-
-// matching + answering, enhanced to use HAMMADDELER
-function enYuksek(key){
-  return Object.entries(DATA.firmalar).filter(([k])=>!k.startsWith('_')).map(([k,v])=>({firma:k,val:v[key]})).sort((a,b)=>b.val-a.val);
-}
 function answerFor(text){
-  const t = text.toLowerCase();
-  // hammaddeler specific
-  if(/en çok hangi hammadde|en cok hangi hammadde|en fazla hammadde/i.test(t)){
-    const m = maxHammadde();
-    return `${m[0]} en çok kullanılan hammadde: ${fmt(m[1])} kg.`;
-  }
-  // direct lookup for a specific hammadde (e.g., pul biber)
-  for(const name of Object.keys(HAMMADDELER)){
-    const key = name.toLowerCase();
-    if(t.includes(key)){
-      return `${name} toplam kullanım: ${fmt(HAMMADDELER[name])} kg.`;
-    }
-  }
-  // other patterns (same as before)
+  const t=text.toLowerCase();
+  if(/en çok hangi hammadde|en cok hangi hammadde|en fazla hammadde/i.test(t)){ const m=maxHammadde(); return `${m[0]} en çok kullanılan hammadde: ${fmt(m[1])} kg.`; }
+  for(const name of Object.keys(HAMMADDELER)){ const key=name.toLowerCase(); if(t.includes(key)){ return `${name} toplam kullanım: ${fmt(HAMMADDELER[name])} kg.`; } }
   if(/toplam üretim|üretim miktarı|genel toplam üretim/i.test(t)) return `Toplam üretim ${fmt(DATA.aylik.uretim_adet)} adet.`;
   if(/toplam (kullanılan )?hammadde|toplam hammadde/i.test(t)) return `Toplam kullanılan hammadde ${fmt(DATA.aylik.toplam_hammadde)} kg.`;
   if(/kaç kişi|kişi sayısı|personel|kaç çalışan/i.test(t)) return `Toplam ${fmt(DATA.aylik.kisi)} kişi çalıştı.`;
@@ -253,18 +105,7 @@ function answerFor(text){
   if(/hammadde fire|omk|opp|toplam fire|fire miktarı/i.test(t)) return `Hammadde fire ${fmt(DATA.aylik.hammadde_fire)} kg, OMK fire ${fmt(DATA.aylik.omk_fire)} kg, OPP fire ${fmt(DATA.aylik.opp_fire)} kg. Toplam fire ${(DATA.aylik.hammadde_fire+DATA.aylik.omk_fire+DATA.aylik.opp_fire).toFixed(2)} kg.`;
   if(/kişi başı|kişi başına/i.test(t)) return `Kişi başına düşen üretim ${(DATA.aylik.uretim_adet/DATA.aylik.kisi).toFixed(2)} adet.`;
   if(/saatlik üretim|1 saatte|saatte ortalama/i.test(t)) return `Ortalama saatlik üretim ${(DATA.aylik.uretim_adet/DATA.aylik.calisma_saat).toFixed(2)} adettir.`;
-  if(/ortalama hammadde|1 adet.*hammadde/i.test(t)) return `Ortalama hammadde kullanımı ${(DATA.aylik.toplam_hammadde/DATA.aylik.uretim_adet).toFixed(4)} kg/adet.`;
-  // firm lookups
-  for(const fname of Object.keys(DATA.firmalar)){
-    if(fname.startsWith('_')) continue;
-    const key = fname.toLowerCase();
-    if(t.includes(key)){
-      const info = DATA.firmalar[fname];
-      if(/üretim|kaç adet|üretim miktarı/i.test(t)) return `${fname} firmasının üretim miktarı ${fmt(info.uret)} adettir.`;
-      if(/hammadde|kaç kg|kullandı/i.test(t)) return `${fname} firmasının kullandığı toplam hammadde ${fmt(info.hammadde)} kg.`;
-      if(/ortalama|adet başı|1 adet/i.test(t)) return `${fname} için ortalama hammadde/adet ${(info.hammadde/(info.uret||1)).toFixed(4)} kg.`;
-    }
-  }
+  for(const fname of Object.keys(DATA.firmalar)){ if(fname.startsWith('_')) continue; const key=fname.toLowerCase(); if(t.includes(key)){ const info=DATA.firmalar[fname]; if(/üretim|kaç adet|üretim miktarı/i.test(t)) return `${fname} firmasının üretim miktarı ${fmt(info.uret)} adettir.`; if(/hammadde|kaç kg|kullandı/i.test(t)) return `${fname} firmasının kullandığı toplam hammadde ${fmt(info.hammadde)} kg.`; if(/ortalama|adet başı|1 adet/i.test(t)) return `${fname} için ortalama hammadde/adet ${(info.hammadde/(info.uret||1)).toFixed(4)} kg.`; } }
   if(/en fazla üretim|en çok üretim|en fazla üretim yapan/i.test(t)){ const top=enYuksek('uret')[0]; return `En fazla üretim yapan firma ${top.firma} — ${fmt(top.val)} adet.`; }
   if(/en az üretim|en düşük üretim/i.test(t)){ const arr=enYuksek('uret'); const bot=arr[arr.length-1]; return `En az üretim yapan firma ${bot.firma} — ${fmt(bot.val)} adet.`; }
   if(/en çok hammadde|en fazla hammadde/i.test(t)){ const top=enYuksek('hammadde')[0]; return `En çok hammadde kullanan firma ${top.firma} — ${fmt(top.val)} kg.`; }
@@ -273,67 +114,13 @@ function answerFor(text){
   return null;
 }
 
-// UI interactions
-document.querySelectorAll('.cat').forEach(cat=>{
-  cat.addEventListener('click',()=>{
-    const qs = cat.querySelector('.qs');
-    qs.classList.toggle('open');
-  });
-});
-document.querySelectorAll('.qitem').forEach(q=> q.addEventListener('click', ()=> handleQuestion(q.dataset.q, true)));
+document.getElementById('mic')?.addEventListener('click', ()=>{ try{ const Rec=window.SpeechRecognition||window.webkitSpeechRecognition; if(!Rec) return; const rec=new Rec(); rec.lang='tr-TR'; rec.interimResults=false; rec.maxAlternatives=1; rec.start(); document.getElementById('flowText').textContent='Dinleniyor... Konuşun.'; rec.onresult=(e)=>{ const text=e.results[0][0].transcript; document.getElementById('flowText').textContent=text; appendBubble(text,'user','🗣️'); setTimeout(()=>{ const ans=answerFor(text)||'Üzgünüm, bu sorunun cevabı veri setinde açıkça bulunmuyor.'; const el=appendBubble(ans,'ai','🤖'); const meta=document.createElement('div'); meta.className='meta'; meta.textContent='Cevap: veriye dayalı sonuç'; el.appendChild(meta); speak(ans); },350); }; rec.onerror=()=>{ document.getElementById('flowText').textContent='Mikrofon hatası. Lütfen tekrar deneyin.'; } }catch(e){console.warn(e)} });
 
-// SpeechRecognition
-const mic = document.getElementById('mic');
-const flowText = document.getElementById('flowText');
-const bubbles = document.getElementById('bubbles');
-let rec=null;
-if('SpeechRecognition' in window || 'webkitSpeechRecognition' in window){
-  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  rec = new Rec(); rec.lang='tr-TR'; rec.interimResults=false; rec.maxAlternatives=1;
-  rec.onresult = (e)=>{ const text = e.results[0][0].transcript; flowText.textContent = text; handleQuestion(text, false); mic.classList.remove('record'); }
-  rec.onerror = (e)=>{ flowText.textContent = 'Mikrofon hatası. Lütfen tekrar deneyin.'; mic.classList.remove('record'); }
-} else {
-  flowText.textContent = 'Tarayıcınız konuşma tanımayı desteklemiyor. Soruları tıklayarak sorabilirsiniz.';
-  mic.style.opacity = 0.7;
-}
+document.getElementById('clear')?.addEventListener('click', ()=>{ document.getElementById('bubbles').innerHTML=''; document.getElementById('flowText').textContent=''; });
 
-mic.addEventListener('click', ()=>{
-  if(rec){
-    try{ rec.start(); flowText.textContent='Dinleniyor... Konuşun.'; mic.classList.add('record'); } catch(e){ rec.stop(); mic.classList.remove('record'); }
-  }
-});
+document.getElementById('download')?.addEventListener('click', ()=>{ const blob=new Blob([document.documentElement.outerHTML], {type:'text/html'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='sanita-ai-updated-data.html'; document.body.appendChild(a); a.click(); a.remove(); });
 
-// handle question
-function handleQuestion(text, fromClick){
-  // show user bubble
-  appendBubble(text,'user','🗣️');
-  // update flow text for visual effect
-  flowText.textContent = text;
-  // compute answer
-  setTimeout(()=>{
-    const ans = answerFor(text) || 'Üzgünüm, bu sorunun cevabı veri setinde açıkça bulunmuyor.';
-    const el = appendBubble(ans,'ai','🤖');
-    const meta = document.createElement('div'); meta.className='meta'; meta.textContent = 'Cevap: veriye dayalı sonuç'; el.appendChild(meta);
-    speak(ans);
-  },350);
-}
-
-// clear
-document.getElementById('clear').addEventListener('click', ()=>{ bubbles.innerHTML=''; flowText.textContent=''; });
-
-// download
-document.getElementById('download').addEventListener('click', ()=>{
-  const blob = new Blob([document.documentElement.outerHTML], {type:'text/html'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'sanita-ai-mobile-hammaddeler.html'; document.body.appendChild(a); a.click(); a.remove();
-});
-
-// initial greeting + spoken usage
-setTimeout(()=>{
-  const greet = 'Merhaba ben Sanita Yapay Zeka Bilgi Asistanıyım. Dilediğini sorabilirsin.';
-  appendBubble(greet,'ai','🤖');
-  speak('Merhaba ben Sanita Yapay Zeka Bilgi Asistanıyım. Dilediğini sorabilirsin. Sesli komut için mikrofon düğmesine dokunabilirsiniz.');
-},700);
+setTimeout(()=>{ const greet='Merhaba ben Sanita Yapay Zeka Bilgi Asistanıyım. Dilediğini sorabilirsin.'; appendBubble(greet,'ai','🤖'); speak('Merhaba ben Sanita Yapay Zeka Bilgi Asistanıyım. Dilediğini sorabilirsin. Sesli komut için mikrofon düğmesine dokunabilirsiniz.'); },700);
 </script>
 </body>
 </html>
