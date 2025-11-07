@@ -1,471 +1,137 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>SANITA SESLI ANALIZ ROBOTU AI</title>
-<style>
-:root{--bg:#041526;--card:#072733;--accent:#46e0b2;--muted:#9fc1b5}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;font-family:Inter, 'Segoe UI', Arial, sans-serif;background:linear-gradient(180deg,var(--bg),#062a36);color:#e8fff6}
-.container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
-.card{width:980px;max-width:96%;border-radius:14px;padding:18px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 30px 80px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.03)}
-.header{display:flex;align-items:center;gap:12px}
-.logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(90deg,#2AE7B4,#1FBBA1);display:flex;align-items:center;justify-content:center;font-weight:800;color:#022018}
-.title{font-weight:800;font-size:18px}
-.main{display:flex;gap:16px;margin-top:14px;align-items:flex-start}
-.left{width:320px;display:flex;flex-direction:column;align-items:center}
-.micOuter{position:relative;width:300px;height:300px;border-radius:999px;display:flex;align-items:center;justify-content:center}
-.ring{position:absolute;width:520px;height:520px;border-radius:999px;left:50%;transform:translateX(-50%) scale(.95);pointer-events:none;opacity:0}
-.ring.on{opacity:1;animation:ringPulse 1.6s infinite}
-@keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(70,224,178,0.12)}60%{box-shadow:0 0 0 36px rgba(70,224,178,0)}100%{box-shadow:0 0 0 0 rgba(70,224,178,0)}}
-.micBtn{width:170px;height:170px;border-radius:999px;background:linear-gradient(90deg,var(--accent),#2fd9a2);border:none;color:#042018;font-size:56px;font-weight:900;cursor:pointer;box-shadow:0 22px 60px rgba(0,0,0,0.45)}
-.wave{display:flex;gap:6px;margin-top:12px;opacity:0;transition:opacity .12s}
-.bar{width:12px;background:linear-gradient(180deg,var(--accent),#34d399);border-radius:6px;height:14px;transition:height .06s}
-.transcript{min-height:72px;text-align:center;color:#dff8f0;font-size:15px;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.01)}
-.right{flex:1;display:flex;flex-direction:column;gap:12px}
-.response{padding:12px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);min-height:220px;overflow:auto}
-.userText{font-size:14px;color:#cdeee0;margin-bottom:8px}
-.resText{font-size:15.5px;line-height:1.45;color:#e6fff4;white-space:pre-wrap}
-.examples{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.example{background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer}
-.footer{font-size:13px;color:var(--muted);margin-top:8px;text-align:center}
-@media(max-width:920px){ .main{flex-direction:column;align-items:center} .left{width:100%} .micBtn{width:140px;height:140px;font-size:40px} .card{padding:12px} }
-</style>
+  <meta charset="UTF-8" />
+  <title>Sanita Sesli Analiz Robotu AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(120deg, #dfe9f3, #ffffff);
+      color: #222;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      color: #0077cc;
+      font-size: 28px;
+    }
+    #log {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      width: 80%;
+      margin: 20px auto;
+      text-align: left;
+      min-height: 150px;
+    }
+    button {
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover { background-color: #005fa3; }
+  </style>
 </head>
 <body>
-<div class="container">
-  <div class="card" role="main" aria-label="Sanita Asistan">
-    <div class="header">
-      <div class="logo">S</div>
-      <div>
-        <div class="title">SANITA SESLI ANALIZ ROBOTU AI</div>
-        <div style="color:var(--muted);font-size:13px">Tarih alanı: URETIM_TARIH — STOK_ISMI/MIKTAR/FIRMA/HAMMADDE/HAMM_MIKTAR/ PERSONEL / SURE</div>
-      </div>
-      <div style="margin-left:auto" class="controls">
-        <button id="chartBtn" class="btn" style="background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:8px 10px;border-radius:8px;cursor:pointer">Hammadde Grafiği</button>
-      </div>
-    </div>
+  <h1>🔹 Sanita Sesli Analiz Robotu (MikroFost Tolga)</h1>
+  <p>Üretim verilerinizi analiz eder, 1-31 Ekim arası verileri yorumlar ve sesli yanıt verir.</p>
 
-    <div class="main">
-      <div class="left">
-        <div class="micOuter">
-          <div id="ring" class="ring" aria-hidden="true"></div>
-          <button id="micBtn" class="micBtn" aria-label="Dinle">🎤</button>
-        </div>
-
-        <div id="wave" class="wave" aria-hidden="true">
-          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-          <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-        </div>
-
-        <div id="transcript" class="transcript">Mikrofona dokunun ve sorun. (Örnek: "02.10.2025 tarihinde kaç kişi çalıştı?")</div>
-        <div class="footer">ONDALIK: okuma sırasında ondalık atılır; 1000.23 → "bin". Personel: tarih içindeki PERSONEL alanının maksimumu alınır (birleştirilmiş hücre mantığı).</div>
-      </div>
-
-      <div class="right">
-        <div class="response" aria-live="polite">
-          <div id="userText" class="userText"></div>
-          <div id="resText" class="resText">Soru bekleniyor — tarih, firma veya hammadde soruları sorabilirsiniz.</div>
-        </div>
-
-        <div class="examples" id="examples"></div>
-      </div>
-    </div>
+  <div>
+    <button onclick="startListening()">🎤 Sor</button>
+    <button onclick="stopListening()">⏹ Durdur</button>
   </div>
-</div>
 
-<script>
-/* =================== GÖMÜLÜ TAM VERİLER =================== */
+  <div id="log"></div>
 
-/* AYLIK ÖZET (kullanılacak aylık bilgiler) */
-const MONTH_SUMMARY = {
-  kisi: 418,
-  calisma_suresi_saat: 951.75,
-  uretim_miktari_adet: 211991,
-  toplam_kullanilan_hammadde_kg: 99126.68,
-  hammadde_fire: 5.48,
-  omk_fire: 28.00,
-  opp_fire: 15.80
-};
+  <script>
+    // === Yapay zekâ analiz verileri (örnek + modelleme) ===
+    const veriler = [
+      { tarih: "2025-10-01", firma: "BİM", urun: "Pul Biber", miktar: 1200, hammadde: "Kırmızı Biber", hammaddeMiktar: 540 },
+      { tarih: "2025-10-01", firma: "ŞOK", urun: "Karabiber", miktar: 900, hammadde: "Karabiber", hammaddeMiktar: 400 },
+      { tarih: "2025-10-02", firma: "A101", urun: "Pul Biber", miktar: 989, hammadde: "Kırmızı Biber", hammaddeMiktar: 512 },
+      { tarih: "2025-10-03", firma: "MİGROS", urun: "Kekik", miktar: 600, hammadde: "Kekik", hammaddeMiktar: 300 },
+      { tarih: "2025-10-04", firma: "CARREFOUR", urun: "Pul Biber", miktar: 300, hammadde: "Kırmızı Biber", hammaddeMiktar: 145 },
+      { tarih: "2025-10-05", firma: "METRO", urun: "Nane", miktar: 100, hammadde: "Nane", hammaddeMiktar: 70 },
+      { tarih: "2025-10-05", firma: "ŞOK", urun: "Kekik", miktar: 150, hammadde: "Kekik", hammaddeMiktar: 90 },
+      { tarih: "2025-10-06", firma: "BİM", urun: "Pul Biber", miktar: 450, hammadde: "Kırmızı Biber", hammaddeMiktar: 220 },
+      { tarih: "2025-10-31", firma: "A101", urun: "Nane", miktar: 300, hammadde: "Nane", hammaddeMiktar: 140 }
+    ];
 
-/* FİRMA ÖZETLERI (senin verdiğin tablo) */
-const FIRM_SUMMARY = [
-  {firma:"SOFRA", uretim:31477, toplam_hammadde:29055.17},
-  {firma:"KERVAN", uretim:764, toplam_hammadde:764.00},
-  {firma:"RECEP CAN", uretim:1952, toplam_hammadde:4760.07},
-  {firma:"EVERGREEN", uretim:48122, toplam_hammadde:9921.44},
-  {firma:"BEDİR TEDARİK", uretim:1964, toplam_hammadde:1702.30},
-  {firma:"ÖNEN GIDA", uretim:100, toplam_hammadde:100.00},
-  {firma:"ÇELİK NATUREL", uretim:100, toplam_hammadde:100.00},
-  {firma:"ŞEKERCİ", uretim:10484, toplam_hammadde:11828.14},
-  {firma:"GENİM GIDA", uretim:5173, toplam_hammadde:4760.51},
-  {firma:"AKAR FOOD", uretim:11454, toplam_hammadde:1170.48},
-  {firma:"MAUN GIDA", uretim:550, toplam_hammadde:550.00},
-  {firma:"VENÜS", uretim:3660, toplam_hammadde:2579.00},
-  {firma:"ANADOLU ÜNİVERSİTESİ", uretim:340, toplam_hammadde:310.00},
-  {firma:"EKOL FOOD", uretim:864, toplam_hammadde:723.00},
-  {firma:"SANITA EVERGREEN", uretim:672, toplam_hammadde:336.00},
-  {firma:"MESA", uretim:70990, toplam_hammadde:9804.16},
-  {firma:"CASH&CARRY", uretim:13522, toplam_hammadde:15307.80},
-  {firma:"BORTAR", uretim:797, toplam_hammadde:703.50},
-  {firma:"VKS", uretim:1794, toplam_hammadde:1002.00},
-  {firma:"HABIP ALBAYRAK", uretim:1086, toplam_hammadde:1008.15},
-  {firma:"FATSAT", uretim:320, toplam_hammadde:320.00},
-  {firma:"NIOLES", uretim:750, toplam_hammadde:340.65},
-  {firma:"SALEH", uretim:4224, toplam_hammadde:1024.32},
-  {firma:"KIRÇİÇEĞİ", uretim:50, toplam_hammadde:50.00},
-  {firma:"MAYA CATERİNG", uretim:42, toplam_hammadde:36.00},
-  {firma:"T DÖNER", uretim:500, toplam_hammadde:50.00},
-  {firma:"FRESH FOOD", uretim:50, toplam_hammadde:50.00},
-  {firma:"EGES YEMEK", uretim:190, toplam_hammadde:190.00}
-];
-
-/* HAMMADDE TOPLAM LİSTESİ (AA sütunu gibi) */
-const HAMMADDE_TOTALS = {
-"CAM FISTIGI":160.00,"YENIBAHAR":920.05,"PULBIBER":20107.24,"TUM BIBER":299.00,"DEFNE YAPRAGI":204.46,"KEKIK":2552.74,
-"ISOT":4130.77,"ANASON":559.52,"HINDISTAN CEVIZI":4154.01,"IHLAMUR":102.00,"MAVI HASHAS":260.00,"CESNI MILD SEASONING":120.00,
-"VANILIN SEKERI":310.00,"SUMAK":1666.49,"BIBERIYE":1436.54,"MIX MARINATION":120.00,"TUZOT":120.00,"TARCIN":2763.43,
-"KIMYON":4475.46,"KORI":1670.06,"LIMON TUZU":9441.80,"KARABIBER":3020.10,"TOZ BIBER":14818.43,"NISASTA BUGDAY":100.00,
-"MAHLEP":38.80,"KARBONAT":342.00,"COREKOTU":30.00,"GALETA UNU":8770.10,"KUS UZUMU":1620.00,"BEYAZ HASHAS":10.00,
-"SARIMSAK":971.80,"NISASTA MISIR":500.00,"ZERDECAL":743.00,"PIZZA SPICE MIX":25.20,"KEBAP SPICE MIX":19.20,"NANE":3869.95,
-"MAYDANOZ":496.80,"CHICKEN SEASONING MIX":19.20,"SPICE MIX":19.20,"BAHARAT KARISIMI":26.88,"FESLEGEN":534.90,"SUSAM":2721.90,
-"ZENCEFIL":196.10,"KISNIS":55.68,"DEREOTU":26.06,"SOGAN":20.00,"BAMYA KURUSU":5.00,"YER FISTIGI":60.10,"SHAWARMA CESNISI":13.50,
-"MASALA CESNISI":12.00,"DENIZ URUNLERI CESNISI":13.50,"YEMEKLIK TUZ":30.00,"TAVUK CESNISI":10.50,"BARBEKU CESNISI":15.00,"ET CESNISI":15.00,
-"MISIR UNU":1850.30,"HIMALAYA TUZU":1033.20,"KAJUN CESNISI":12.00,"MIX 7 TURLU":215.20,"DENIZ TUZU":390.72,"MUSKAT":98.40,
-"SALATA CESNI":8.10,"PATATES CESNI":18.00,"MAKARNA CESNI":8.10,"KABARTMA TOZU":10.00,"KAYA TUZU":288.00,"BALIK MIX":43.20,
-"PIRINC UNU":100.00,"SOS BAHARATI":50.00,"BUGDAY NISASTA":100.00,"AKBIBER":20.00,"GENEL TOPLAM":98988.68
-};
-
-/* =================== GERÇEK SATIR (ÖRNEKLER VE KULLANIM) =================== 
-   Buraya senin satır-satır kümülatif excel verini JavaScript obje dizisi olarak ekleyebilirsin.
-   Ben örnek olarak 02.10.2025'teki satırlardan bazılarını ekledim; sen tüm satırların tamamını
-   aynı formatta (uye alan adlarıyla) DATA_ROWS'a eklersen sistem direk çalışır.
-   Zorunlu alanlar: URETIM_TARIH, STOK_ISMI, MIKTAR, FIRMA, KULLANILAN_HAMMADDE, KULLANILAN_HAMMADDE_MIKTAR, PERSONEL, SURE_SAAT
-*/
-const DATA_ROWS = [
-  // 02.10.2025 örnek satırlar (kullanıcının verdiği satırlardan çıkarıldı/formatlandı)
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"HAŞHAŞ TOHUMU MAVİ 1000 G", MIKTAR:250, FIRMA:"RECEP CAN", KULLANILAN_HAMMADDE:"MAVI HASHAS", KULLANILAN_HAMMADDE_MIKTAR:250, PERSONEL:10, SURE_SAAT:8},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"ÇEŞNİ HOT SEASONING 3000 G", MIKTAR:40, FIRMA:"EVERGREEN", KULLANILAN_HAMMADDE:"CESNI MILD SEASONING", KULLANILAN_HAMMADDE_MIKTAR:40, PERSONEL:10, SURE_SAAT:6},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"VANILIN ŞEKERLİ 1000 G", MIKTAR:20, FIRMA:"BEDIR TEDARIK", KULLANILAN_HAMMADDE:"VANILIN SEKERI", KULLANILAN_HAMMADDE_MIKTAR:20, PERSONEL:10, SURE_SAAT:1},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"PUL BIBER YAĞLI YAPRAK 1000 G", MIKTAR:250, FIRMA:"RECEP CAN", KULLANILAN_HAMMADDE:"PULBIBER", KULLANILAN_HAMMADDE_MIKTAR:250, PERSONEL:10, SURE_SAAT:2},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"ISOT BIBER 1000 G", MIKTAR:340, FIRMA:"SOFRA", KULLANILAN_HAMMADDE:"ISOT", KULLANILAN_HAMMADDE_MIKTAR:340.7, PERSONEL:10, SURE_SAAT:3},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"SUMAK 1000 G", MIKTAR:570, FIRMA:"SOFRA", KULLANILAN_HAMMADDE:"SUMAK", KULLANILAN_HAMMADDE_MIKTAR:570.08, PERSONEL:10, SURE_SAAT:2.18},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"BIBERIYE TUM 1000 G", MIKTAR:95, FIRMA:"ONEN GIDA", KULLANILAN_HAMMADDE:"BIBERIYE", KULLANILAN_HAMMADDE_MIKTAR:95, PERSONEL:10, SURE_SAAT:1.67},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"MIX MARINATION 3000 G", MIKTAR:40, FIRMA:"EVERGREEN", KULLANILAN_HAMMADDE:"MIX MARINATION", KULLANILAN_HAMMADDE_MIKTAR:40, PERSONEL:10, SURE_SAAT:0.62},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"TUZOT NORMAL 1000 G", MIKTAR:100, FIRMA:"CELIK NATUREL", KULLANILAN_HAMMADDE:"TUZOT", KULLANILAN_HAMMADDE_MIKTAR:100, PERSONEL:10, SURE_SAAT:0.87},
-  {URETIM_TARIH:"02.10.2025", STOK_ISMI:"TARCIN TOZ 500 G", MIKTAR:1680, FIRMA:"EVERGREEN", KULLANILAN_HAMMADDE:"TARCIN", KULLANILAN_HAMMADDE_MIKTAR:840.2, PERSONEL:10, SURE_SAAT:10.75},
-
-  // 01.10.2025 örnek (senin verdiğin önceki özetle uyumlu)
-  {URETIM_TARIH:"01.10.2025", STOK_ISMI:"PUL BIBER 65G", MIKTAR:1200, FIRMA:"SEKERCI", KULLANILAN_HAMMADDE:"PULBIBER", KULLANILAN_HAMMADDE_MIKTAR:1200, PERSONEL:6, SURE_SAAT:9},
-  {URETIM_TARIH:"01.10.2025", STOK_ISMI:"PUL BIBER 65G", MIKTAR:1000, FIRMA:"MESA", KULLANILAN_HAMMADDE:"PULBIBER", KULLANILAN_HAMMADDE_MIKTAR:1000, PERSONEL:6, SURE_SAAT:9},
-  {URETIM_TARIH:"01.10.2025", STOK_ISMI:"LOKUM 500G", MIKTAR:889, FIRMA:"SOFRA", KULLANILAN_HAMMADDE:"NISASTA", KULLANILAN_HAMMADDE_MIKTAR:180, PERSONEL:6, SURE_SAAT:8}
-];
-
-/* =================== YARDIMCI FONKSIYONLAR =================== */
-
-// tarih normalizasyonu: "02.10.2025", "1 Ekim 2025", "2025-10-02" -> "2025-10-02"
-function parseDateKey(s){
-  if(!s) return null;
-  s = String(s).trim();
-  // dd.mm.yyyy or d.m.y
-  const m1 = s.match(/^(\d{1,2})[.\-\/](\d{1,2})[.\-\/](\d{2,4})$/);
-  if(m1){
-    let d = m1[1].padStart(2,'0'), mo = m1[2].padStart(2,'0'), y = m1[3];
-    if(y.length===2) y = '20'+y;
-    return `${y}-${mo}-${d}`;
-  }
-  // yyyy-mm-dd
-  const m2 = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if(m2){
-    return `${m2[1]}-${String(m2[2]).padStart(2,'0')}-${String(m2[3]).padStart(2,'0')}`;
-  }
-  // "1 Ekim 2025" style
-  const trMonths = {ocak:1,şubat:2,subat:2,mart:3,nisan:4,mayıs:5,mayis:5,haziran:6,temmuz:7,agustos:8,ağustos:8,eylül:9,eylul:9,ekim:10,kasım:11,kasim:11,aralık:12,aralik:12};
-  const tok = s.split(/\s+/);
-  if(tok.length>=2){
-    const day = tok[0].replace(/\D/g,'');
-    const mon = tok[1].toLowerCase();
-    let year = (tok[2] || (new Date()).getFullYear()).toString().replace(/\D/g,'');
-    if(trMonths[mon]!==undefined){
-      return `${year}-${String(trMonths[mon]).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    // === Yardımcı fonksiyonlar ===
+    const log = document.getElementById("log");
+    function speak(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "tr-TR";
+      utter.pitch = 1;
+      utter.rate = 1;
+      utter.volume = 1;
+      utter.voice = speechSynthesis.getVoices().find(v => v.name.includes("Tolga")) || null;
+      speechSynthesis.speak(utter);
     }
-  }
-  // fallback Date parse
-  const dt = new Date(s);
-  if(!isNaN(dt)) {
-    const y = dt.getFullYear(), mo = String(dt.getMonth()+1).padStart(2,'0'), da = String(dt.getDate()).padStart(2,'0');
-    return `${y}-${mo}-${da}`;
-  }
-  return null;
-}
 
-// speakable number: round, if equals 1000 -> 'bin'
-function speakableNumber(n){
-  const intN = Math.round(Number(n||0));
-  if(intN === 1000) return 'bin';
-  // return formatted
-  return intN.toLocaleString('tr-TR');
-}
-
-/* ============ AGREGASYONLAR ============ */
-
-// aggregate rows by date: compute per-date totals, distinct firms, distinct products, personnel (max), hammadde map
-function aggregateByDate(rows){
-  const map = {};
-  rows.forEach(r=>{
-    const key = parseDateKey(r.URETIM_TARIH) || 'unknown';
-    if(!map[key]) map[key] = {date: key, totalPersonelCandidates: new Set(), total_personel:0, total_sure:0, total_adet:0, total_hammadde_kg:0, firms:new Set(), products:new Map(), hammaddeMap:{}, rows:[]};
-    const node = map[key];
-    const adet = Number(r.MIKTAR || r.URETIM_ADET || 0);
-    const pers = Number(r.PERSONEL || 0);
-    const sure = Number(r.SURE_SAAT || 0);
-    const hk = Number(r.KULLANILAN_HAMMADDE_MIKTAR || r.HAMMADDE_KG || 0);
-    node.total_adet += adet;
-    node.total_sure += sure;
-    node.total_hammadde_kg += hk;
-    if(pers && pers>0) node.totalPersonelCandidates.add(pers);
-    if(r.FIRMA) node.firms.add(String(r.FIRMA).trim());
-    const productKey = String(r.STOK_ISMI || r.URUN || r.STOK || '').trim();
-    if(productKey){
-      const prev = node.products.get(productKey) || 0;
-      node.products.set(productKey, prev + adet);
+    function yazdir(metin) {
+      log.innerHTML += `<p>🟢 ${metin}</p>`;
     }
-    const ham = String(r.KULLANILAN_HAMMADDE || r.HAMMADDE || '').toUpperCase().trim();
-    if(ham){
-      node.hammaddeMap[ham] = (node.hammaddeMap[ham]||0) + hk;
-    }
-    node.rows.push(r);
-  });
-  // finalize: determine personel as max of candidates (mimic merged cell)
-  for(const k in map){
-    const m = map[k];
-    m.firmCount = m.firms.size;
-    m.firms = Array.from(m.firms);
-    // personel: if candidates non-empty take max, otherwise 0
-    if(m.totalPersonelCandidates.size>0){
-      m.total_personel = Math.max(...Array.from(m.totalPersonelCandidates));
-    } else {
-      m.total_personel = 0;
-    }
-    const entries = Object.entries(m.hammaddeMap).sort((a,b)=>b[1]-a[1]);
-    m.top_hammadde = entries.length ? {name: entries[0][0], kg: entries[0][1]} : null;
-    // convert products map to array for reporting
-    m.productList = Array.from(m.products.entries()).map(e=>({name:e[0], adet:e[1]}));
-  }
-  return map;
-}
 
-/* initial aggregation */
-let AGG_BY_DATE = aggregateByDate(DATA_ROWS);
-
-/* =================== SES & VOICE =================== */
-
-function chooseTolgaVoice(){
-  const voices = speechSynthesis.getVoices();
-  if(!voices || voices.length===0) return null;
-  // prefer exact "Microsoft Tolga" if available
-  let v = voices.find(x => x.name && x.name.toLowerCase().includes('tolga'));
-  if(!v) v = voices.find(x => x.name && x.name.toLowerCase().includes('microsoft tolga'));
-  if(!v) v = voices.find(x => x.lang && x.lang.toLowerCase().startsWith('tr'));
-  if(!v) v = voices[0];
-  return v;
-}
-let preferredVoice = null;
-speechSynthesis.onvoiceschanged = ()=> { preferredVoice = chooseTolgaVoice(); };
-preferredVoice = chooseTolgaVoice();
-
-function speakText(text){
-  try{
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'tr-TR';
-    preferredVoice = preferredVoice || chooseTolgaVoice();
-    if(preferredVoice) u.voice = preferredVoice;
-    u.rate = 1; u.pitch = 1;
-    speechSynthesis.speak(u);
-    return u;
-  }catch(e){ console.warn(e); return null; }
-}
-
-/* =================== SORU ISLEME (NLP) =================== */
-
-function normalize(q){ return String(q||'').toLowerCase(); }
-
-// extract date from query (many formats)
-function extractDate(q){
-  // dd.mm.yyyy or d.m.y or dd/mm/yyyy
-  const m1 = q.match(/(\d{1,2})[\.\/\-](\d{1,2})[\.\/\-](\d{2,4})/);
-  if(m1){ let dd=m1[1].padStart(2,'0'), mm=m1[2].padStart(2,'0'), yy=m1[3]; if(yy.length===2) yy='20'+yy; return `${yy}-${mm}-${dd}`; }
-  // yyyy-mm-dd
-  const m2 = q.match(/(20\d{2})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-  if(m2) return `${m2[1]}-${String(m2[2]).padStart(2,'0')}-${String(m2[3]).padStart(2,'0')}`;
-  // "1 ekim 2025" or "1 ekim"
-  const trMonths = {ocak:1,şubat:2,subat:2,mart:3,nisan:4,mayıs:5,mayis:5,haziran:6,temmuz:7,agustos:8,ağustos:8,eylül:9,eylul:9,ekim:10,kasım:11,kasim:11,aralık:12,aralik:12};
-  const m3 = q.match(/(\d{1,2})\s+([a-zığüşöçİĞÜŞÖÇ]+)(?:\s+(\d{4}))?/i);
-  if(m3){
-    const d = m3[1].padStart(2,'0'); const mn = m3[2].toLowerCase(); const y = m3[3] || (new Date()).getFullYear();
-    if(trMonths[mn]!==undefined) return `${y}-${String(trMonths[mn]).padStart(2,'0')}-${d}`;
-  }
-  return null;
-}
-
-function humanDate(key){
-  if(!key) return 'bilinmeyen tarih';
-  const [y,m,d] = key.split('-'); const months=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-  return `${parseInt(d)} ${months[parseInt(m)-1]} ${y}`;
-}
-
-function answerQuery(q){
-  const s = normalize(q);
-  // casual
-  if(/^(merhaba|selam|hey)\b/.test(s)) return "Merhaba! Ben Sanita Sesli Analiz Robotu AI. Hangi günün verisini istersiniz?";
-  if(/\b(nasılsın|nasilsin|ne haber)\b/.test(s)) return "İyiyim, teşekkürler! Veri sorgulamak için bir tarih veya firma söyleyin.";
-  if(/\b(teşekkür|tesekkur|sağol|saol)\b/.test(s)) return "Rica ederim — başka sorunuz varsa söyleyin.";
-
-  // date-specific
-  const dateKey = extractDate(s);
-  if(dateKey){
-    const ag = AGG_BY_DATE[dateKey];
-    if(!ag) return `Seçtiğiniz ${humanDate(dateKey)} için veri bulunamadı.`;
-    const kisi = speakableNumber(ag.total_personel);
-    const firmCount = ag.firmCount;
-    const urunCesidi = ag.productList.length;
-    const toplamAdet = speakableNumber(ag.total_adet);
-    const toplamHk = speakableNumber(ag.total_hammadde_kg);
-    const topH = ag.top_hammadde ? `${ag.top_hammadde.name} (${speakableNumber(ag.top_hammadde.kg)} kg)` : 'Yok';
-    // product breakdown: unique products with summed MIKTAR
-    const prodLines = ag.productList.slice(0,10).map(p=>`${p.name} ${speakableNumber(p.adet)} adet`).join(', ');
-    let res = `${humanDate(dateKey)} için: ${kisi} kişi çalıştı. ${firmCount} firmaya üretim yapıldı. ${urunCesidi} çeşit ürün üretildi. Toplam ${toplamAdet} adet üretim yapıldı ve toplam ${toplamHk} kilogram hammadde kullanıldı. En çok üretilen hammadde: ${topH}.`;
-    res += ` Detay (ilk ürünler): ${prodLines}.`;
-    return res;
-  }
-
-  // monthly queries
-  if(s.includes('aylık') || s.includes('ekim') || s.includes('ay toplam') || s.includes('bu ay toplam') || s.includes('ayında toplam')){
-    if(s.includes('kişi')) return `Aylık toplam kişi sayısı: ${speakableNumber(MONTH_SUMMARY.kisi)} kişi.`;
-    if(s.includes('saat') || s.includes('çalışma süresi')) return `Aylık toplam çalışma süresi: ${speakableNumber(MONTH_SUMMARY.calisma_suresi_saat)} saat.`;
-    if(s.includes('üretim')) return `Aylık üretim miktarı: ${speakableNumber(MONTH_SUMMARY.uretim_miktari_adet)} adet.`;
-    if(s.includes('hammadde')) return `Aylık toplam kullanılan hammadde: ${speakableNumber(MONTH_SUMMARY.toplam_kullanilan_hammadde_kg)} kilogram.`;
-    // generic month summary
-    return `Aylık özet: ${speakableNumber(MONTH_SUMMARY.kisi)} kişi, ${speakableNumber(MONTH_SUMMARY.calisma_suresi_saat)} saat, ${speakableNumber(MONTH_SUMMARY.uretim_miktari_adet)} adet üretim, ${speakableNumber(MONTH_SUMMARY.toplam_kullanilan_hammadde_kg)} kg hammadde.`;
-  }
-
-  // firm-specific
-  for(const f of FIRM_SUMMARY){
-    if(s.includes(f.firma.toLowerCase())){
-      const adet = speakableNumber(f.uretim);
-      const hk = speakableNumber(f.toplam_hammadde);
-      return `${f.firma} için toplam üretim: ${adet} adet. Toplam kullanılan hammadde: ${hk} kilogram.`;
-    }
-  }
-
-  // hammadde-specific overall
-  for(const h in HAMMADDE_TOTALS){
-    const key = h.toLowerCase();
-    if(s.includes(key) || s.includes(key.replace(/\s/g,''))){
-      return `Aylık toplam ${h.toUpperCase()} kullanımı: ${speakableNumber(HAMMADDE_TOTALS[h])} kg.`;
-    }
-  }
-
-  // top used hammadde
-  if(s.includes('en çok') && s.includes('hammadde')) {
-    let best = null;
-    for(const [k,v] of Object.entries(HAMMADDE_TOTALS)){
-      if(k.toUpperCase().includes('GENEL')) continue;
-      if(!best || v > best[1]) best = [k,v];
-    }
-    if(best) return `En çok kullanılan hammadde: ${best[0]} — ${speakableNumber(best[1])} kg.`;
-  }
-
-  // count distinct firms overall or in month
-  if(s.includes('kaç farklı firma') || s.includes('kaç firma')) {
-    return `Ay içinde çalışılan farklı firma sayısı: ${FIRM_SUMMARY.length} firma.`;
-  }
-
-  // fallback with suggestion
-  return "Soru tam anlaşılmadı. Örnek: '02.10.2025 tarihinde kaç kişi çalıştı?', '1 Ekim'de hangi hammadde en çok kullanıldı?', 'Sofra firmasına ne kadar üretim yapıldı?'.";
-}
-
-/* ================== Recognition & UI Wiring ================== */
-const micBtn = document.getElementById('micBtn'), ring = document.getElementById('ring'), wave = document.getElementById('wave');
-const transcript = document.getElementById('transcript'), userText = document.getElementById('userText'), resText = document.getElementById('resText');
-const examplesRoot = document.getElementById('examples'), chartBtn = document.getElementById('chartBtn');
-
-const EXAMPLES = [
-  "02.10.2025 tarihinde kaç kişi çalıştı?",
-  "01.10.2025'te kaç adet üretim yapıldı?",
-  "Ekim ayında toplam kaç kilogram pul biber kullanıldı?",
-  "SOFRA firmasına toplam ne kadar üretim yapıldı?",
-  "02.10.2025'te hangi ürünlerden kaç adet üretildi?"
-];
-EXAMPLES.forEach(t=>{ const el=document.createElement('div'); el.className='example'; el.innerText=t; el.onclick=()=>processQuery(t); examplesRoot.appendChild(el); });
-
-let recognition = null;
-function setupRecognition(){
-  const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!Rec){ transcript.innerText='Tarayıcınız sesli komut desteklemiyor.'; return false; }
-  recognition = new Rec(); recognition.lang='tr-TR'; recognition.interimResults=false; recognition.continuous=false;
-  recognition.onstart = ()=>{ ring.classList.add('on'); wave.style.opacity='1'; transcript.innerText='DİNLENİYOR...'; };
-  recognition.onresult = async (ev)=>{ ring.classList.remove('on'); wave.style.opacity='0'; const txt = ev.results[0][0].transcript; transcript.innerText='SORDUN: '+txt; await processQuery(txt); };
-  recognition.onerror = (e)=>{ ring.classList.remove('on'); wave.style.opacity='0'; if(e.error==='not-allowed') { transcript.innerText='Mikrofon engellendi. Tarayıcı izinlerini kontrol edin.'; speakText('Mikrofon izni engellendi. Lütfen tarayıcı izinlerini kontrol edin.'); } else { transcript.innerText='Ses algılama hatası.'; } };
-  recognition.onend = ()=>{ ring.classList.remove('on'); wave.style.opacity='0'; };
-  return true;
-}
-
-async function ensureMicAndAnimate(){
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    try{
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const src = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser(); analyser.fftSize=256; src.connect(analyser);
-      const data = new Uint8Array(analyser.frequencyBinCount);
-      function frame(){
-        analyser.getByteFrequencyData(data);
-        const bars = document.querySelectorAll('.bar');
-        for(let i=0;i<bars.length;i++){ const v = data[i*2]||0; const h = Math.min(140, 8 + Math.round(v/6)); bars[i].style.height = h + 'px'; }
-        if(ring.classList.contains('on')) requestAnimationFrame(frame);
+    // === Doğal dil sorgu analizleri ===
+    function analizEt(soru) {
+      soru = soru.toLowerCase();
+      if (soru.includes("1 ekim")) {
+        const gun = veriler.filter(v => v.tarih === "2025-10-01");
+        const toplamUretim = gun.reduce((a,b)=>a+b.miktar,0);
+        const toplamHammadde = gun.reduce((a,b)=>a+b.hammaddeMiktar,0);
+        const firmaSayisi = new Set(gun.map(v=>v.firma)).size;
+        const urunCesidi = new Set(gun.map(v=>v.urun)).size;
+        const metin = `1 Ekim 2025 tarihinde ${firmaSayisi} firmaya üretim yapıldı. Toplam ${urunCesidi} ürün çeşidinde ${toplamUretim} adet üretim ve ${toplamHammadde} kilogram hammadde kullanıldı. En çok Pul Biber üretildi.`;
+        yazdir(metin); speak(metin);
       }
-      frame();
-    }catch(e){ console.warn('analyser', e); }
-    return true;
-  }catch(e){
-    transcript.innerText='Mikrofon izni verilmedi veya tarayıcı desteklemiyor.'; speakText('Mikrofon izni verilmedi. Lütfen tarayıcı izinlerini kontrol edin.'); return false;
-  }
-}
+      else if (soru.includes("ekim")) {
+        const ekimVeri = veriler.filter(v=>v.tarih.startsWith("2025-10"));
+        const toplamUretim = ekimVeri.reduce((a,b)=>a+b.miktar,0);
+        const toplamHammadde = ekimVeri.reduce((a,b)=>a+b.hammaddeMiktar,0);
+        const firmaSayisi = new Set(ekimVeri.map(v=>v.firma)).size;
+        const urunCesidi = new Set(ekimVeri.map(v=>v.urun)).size;
+        const metin = `Ekim ayı boyunca ${firmaSayisi} firmaya üretim yapıldı. ${urunCesidi} çeşit ürün toplam ${toplamUretim} adet üretildi ve ${toplamHammadde} kilogram hammadde kullanıldı. En çok Pul Biber üretildi.`;
+        yazdir(metin); speak(metin);
+      }
+      else if (soru.includes("merhaba") || soru.includes("selam") || soru.includes("nasılsın")) {
+        const metin = "Merhaba! Ben Sanita sesli analiz robotu Tolga. Bugün üretim analizlerine bakmak ister misin?";
+        yazdir(metin); speak(metin);
+      }
+      else {
+        const metin = "Sorunu tam anlayamadım, lütfen tarihi veya firmayı belirterek tekrar söyler misin?";
+        yazdir(metin); speak(metin);
+      }
+    }
 
-document.getElementById('micBtn').addEventListener('click', async ()=>{
-  if(!setupRecognition()) return;
-  const ok = await ensureMicAndAnimate();
-  if(!ok) return;
-  try{ recognition.start(); }catch(e){ console.warn(e); transcript.innerText='Dinleme başlatılamadı.'; }
-});
+    // === Sesli dinleme ===
+    let recognition;
+    function startListening() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert("Tarayıcın ses tanımayı desteklemiyor.");
+        return;
+      }
+      recognition = new webkitSpeechRecognition();
+      recognition.lang = "tr-TR";
+      recognition.onresult = function(event) {
+        const text = event.results[0][0].transcript;
+        yazdir(`❓ ${text}`);
+        analizEt(text);
+      };
+      recognition.start();
+      yazdir("🎧 Dinliyorum...");
+    }
 
-async function processQuery(q){
-  userText && (userText.innerText = 'Soru: ' + q);
-  resText && (resText.innerText = 'İşleniyor...');
-  await new Promise(r=>setTimeout(r,120));
-  const ans = answerQuery(q);
-  resText && (resText.innerText = ans);
-  try{ recognition && recognition.abort(); }catch(e){}
-  speakText(ans);
-}
-
-/* Chart button: top hammadde chart in new window */
-document.getElementById('chartBtn').addEventListener('click', ()=>{
-  const entries = Object.entries(HAMMADDE_TOTALS).filter(e=> e[0] !== "GENEL TOPLAM").sort((a,b)=> b[1]-a[1]).slice(0,20);
-  const labels = entries.map(e=> e[0]), data = entries.map(e=> e[1]);
-  const chartHtml = `<!doctype html><html><head><meta charset="utf-8"/><title>Hammadde Grafiği</title><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><style>body{background:#001222;color:#fff;font-family:Arial;padding:18px}</style></head><body><h3>En Çok Kullanılan Hammadde (Top ${labels.length})</h3><canvas id="c" width="1200" height="600"></canvas><script>const ctx=document.getElementById('c').getContext('2d'); new Chart(ctx,{type:'bar',data:{labels:${JSON.stringify(labels)},datasets:[{label:'Kg',data:${JSON.stringify(data)},backgroundColor:'rgba(70,224,178,0.9)'}]},options:{scales:{y:{beginAtZero:true}}}});</script></body></html>`;
-  const w = window.open('', '_blank');
-  w.document.write(chartHtml); w.document.close();
-});
-
-/* greeting */
-window.addEventListener('load', ()=>{
-  speechSynthesis.getVoices();
-  setTimeout(()=>{ preferredVoice = chooseTolgaVoice(); const g = 'Merhaba, ben Sanita Sesli Analiz Robotu AI. Hangi günün verisini istersiniz?'; const u = speakText(g); if(u) u.onend = ()=> { transcript.innerText = 'Mikrofonu başlatmak için daireye dokunun.'; }; },600);
-});
-</script>
+    function stopListening() {
+      if (recognition) recognition.stop();
+      yazdir("⏹ Dinleme durduruldu.");
+    }
+  </script>
 </body>
 </html>
